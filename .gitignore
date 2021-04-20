@@ -1,0 +1,44 @@
+# ---> Go
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+
+*.test
+*.prof
+*.swp
+.vscode
+*.exe
+debug
+.idea/
+.vscode/
+
+# html files
+
+# config files
+*.pid
+*.tgz
+*.dat
+__debug_bin
+DS_Store
+log.txt
+test/
+*.dat
+*_test.go
+res/
+res.zip

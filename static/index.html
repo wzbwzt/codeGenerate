@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, minimum-scale=0.1, maximum-scale=10, user-scalable=yes"/>
+    <title>代码生成器</title>
+    <style>
+        th {
+            text-align: left;
+        }
+
+        table {
+            border: 2px solid black;
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 1.8rem;
+        }
+
+        table, tr, th, td {
+            border: 1px solid black;
+        }
+
+        .table-checkbox {
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        .query-class {
+            width: 15%;
+            margin: 1% 0.5%;
+            height: 2rem;
+            line-height: 2rem;
+            font-size: 1.5rem
+        }
+
+        .button-class {
+            /*width: 10%;*/
+            height: 2.5rem;
+            margin: 1% 0.5%;
+            line-height: 1.8rem;
+            font-size: 1.5rem;
+            background-color: #79c2ff;
+            border: 2px solid #79c2ff;
+            border-radius: 5px;
+        }
+
+        .form-item {
+            padding: 1px;
+            display: flex;
+            height: 2.5rem;
+            margin: 1% 0.5%;
+            line-height: 2.5rem;
+            font-size: 1.5rem;
+
+        }
+
+        .form-item-title {
+            text-align: right;
+            width: 20%;
+            align-content: center;
+        }
+
+        .form-item-input {
+            height: 2rem;
+            line-height: 2rem;
+            font-size: 1.5rem;
+            align-items: center
+        }
+
+        .form-item-radio {
+            width: 2%;
+            height: 2rem;
+            line-height: 1rem;
+            align-items: center;
+            margin: 0.2rem;
+        }
+
+        .form-item-radio-label {
+            width: 10%;
+        }
+    </style>
+</head>
+<body style="border-radius: 5px;border: 5px solid gray">
+<div id="container" style="width: 95%;height: 100%;padding: 2rem;">
+    <div v-show="tableShow">
+        <div style="margin: 10px">
+            <input type="text" v-model="tableName" class="query-class" placeholder="表名"/>
+
+            <button class="button-class" v-on:click="clearFilter">清空</button>
+            <button class="button-class" v-on:click="reload">刷新</button>
+            <button class="button-class" v-on:click="showModal">生成</button>
+        </div>
+
+        <table style="">
+            <tr>
+                <td style="width: 1rem">#</td>
+                <th>表名</th>
+                <th>备注</th>
+                <th>创建时间</th>
+            </tr>
+            <tr v-for="(item,index) in tableList" v-show="item.tableName.includes(tableName)">
+                <td><input v-on:click="selectedBox(index)" class="table-checkbox" type="checkbox"/></td>
+                <td>{{item.tableName}}</td>
+                <td>{{item.tableComment}}</td>
+                <td>{{item.createTime}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div v-show="!tableShow">
+        <div class="form-item">
+            <div class="form-item-title">模块名称：</div>
+            <input type="text" v-model="generateBody.modelName" class="form-item-input"
+                   placeholder="模块名称"/>
+        </div>
+        <div class="form-item">
+            <span class="form-item-title">连接数据库：</span>
+            <input type="text" v-model="generateBody.connectDb" class="form-item-input"
+                   placeholder="连接数据库"/>
+        </div>
+        <div class="form-item">
+            <span class="form-item-title">忽略表前缀：</span>
+            <input type="text" v-model="generateBody.ignoreTablePrefix" class="form-item-input"
+                   placeholder="忽略表前缀"/>
+        </div>
+        <div class="form-item">
+            <span class="form-item-title">数据转换类型：</span>
+            <input type="radio" class="form-item-radio" id="normal" value="normal" v-model="generateBody.protoType">
+            <label for="normal" class="form-item-radio-label">普通</label>
+            <input type="radio" class="form-item-radio" id="goproto" value="goproto"
+                   v-model="generateBody.protoType" disabled>
+            <label for="goproto" class="form-item-radio-label">go-proto</label>
+            <input type="radio" class="form-item-radio" id="gogoproto" value="gogoproto"
+                   v-model="generateBody.protoType" disabled>
+            <label for="gogoproto" class="form-item-radio-label">gogo-proto</label>
+        </div>
+        <div class="form-item">
+            <span class="form-item-title">服务名类型：</span>
+            <input type="radio" class="form-item-radio" id="service1" value="1"
+                   v-model="generateBody.serviceNameType">
+            <label for="service1" class="form-item-radio-label">表服务名</label>
+            <input type="radio" class="form-item-radio" id="service0" value="0"
+                   v-model="generateBody.serviceNameType">
+            <label for="service0" class="form-item-radio-label">单服务名</label>
+
+
+            <span v-show="generateBody.serviceNameType == 0" class="form-item-title" style="width: 10%">服务名：</span>
+            <input v-show="generateBody.serviceNameType == 0" type="text" v-model="generateBody.serviceName"
+                   class="form-item-input" placeholder="服务名"/>
+        </div>
+
+        <div v-for="(item,index) in generateBody.tableList" class="form-item">
+            <span class="form-item-title">表名：</span>
+            <input type="text" v-model="item.tableName" class="form-item-input" placeholder="表名" disabled/>
+
+            <span class="form-item-title" style="width: 10%">注释：</span>
+            <input type="text" v-model="item.tableComment" class="form-item-input"
+                   placeholder="注释"/>
+        </div>
+
+
+        <div style="margin: 10px 15%">
+            <button class="button-class" v-on:click="closeModal">返回</button>
+            <button class="button-class" v-on:click="generateCode">确认生成</button>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="./js/vue.min.js"></script>
+<script type="text/javascript">
+    let vm = new Vue({
+        el: '#container',
+        data: {
+            tableList: [],
+            tableShow: true,
+            tableName: '',
+            selectedList: [],
+            generateBody: {
+                modelName: 'pkcenter',
+                connectDb: 'ServiceDB',
+                ignoreTablePrefix: 'pkcenter_',
+                protoType: 'normal',
+                serviceNameType: 1,
+                serviceName: 'BasicService',
+                tableList: []
+            }
+        },
+
+        methods: {
+            reload() {
+                let httpRequest = new XMLHttpRequest();
+                httpRequest.open('POST', 'http://' + window.location.host + '/api/tableList');
+                httpRequest.setRequestHeader("Content-type", "application/json");
+                httpRequest.send('');
+
+                httpRequest.onload = function () {
+                    let responseText = httpRequest.responseText;
+                    let res = JSON.parse(responseText);
+                    if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+                        if (res.code === 10000) {
+                            vm.tableList = res.data.list;
+                            vm.tableList.forEach((item) => {
+                                item.checked = false
+                            });
+                            console.log(vm.tableList)
+                        }
+                    }
+                };
+            },
+            clearFilter() {
+                vm.tableName = '';
+            },
+            selectedBox(index) {
+                console.log('selectedBox', index);
+                let selectedFlag = false;
+                let selectedIndex = -1;
+
+                for (let i = 0; i < vm.selectedList.length; i++) {
+                    if (vm.selectedList[i] == index) {
+                        selectedFlag = true;
+                        selectedIndex = -1;
+                    }
+                }
+
+                // 已选判断 已选从已选list移除
+                if (selectedFlag) {
+                    vm.selectedList.splice(selectedIndex, 1);
+                } else {
+                    vm.selectedList.push(index);
+                }
+
+            },
+
+            showModal() {
+                if (vm.selectedList.length <= 0) {
+                    alert('请至少选中一个');
+                    return
+                }
+                vm.selectedList.sort();
+                let tableList = [];
+                vm.selectedList.forEach((item) => {
+                    let temp = {
+                        tableName: vm.tableList[item].tableName,
+                        tableComment: vm.tableList[item].tableComment,
+                        middleTableName: '',
+                        tableMethod: []
+                    };
+                    tableList.push(temp)
+                });
+                vm.generateBody.tableList = tableList;
+                vm.tableShow = false;
+                console.log(vm.tableList)
+
+            },
+            closeModal() {
+                vm.tableShow = true;
+            },
+            generateCode() {
+                vm.generateBody.serviceNameType = parseInt(vm.generateBody.serviceNameType);
+                let httpRequest = new XMLHttpRequest();
+                httpRequest.open('POST', 'http://' + window.location.host + '/api/generateCode');
+                httpRequest.setRequestHeader("Content-type", "application/json");
+                httpRequest.send(JSON.stringify(vm.generateBody));
+
+                httpRequest.onload = function () {
+                    let responseText = httpRequest.responseText;
+                    let res = JSON.parse(responseText);
+                    if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+                        if (res.code === 10000) {
+                            console.log(res);
+                            vm.tableShow = true;
+                            alert('代码生成成功，查看res.zip文件');
+                        }else{
+                            alert('代码生成失败，查看后台日志');
+                        }
+                    }
+                };
+                httpRequest.onerror =function () {
+                    alert('请求异常！');
+                }
+            }
+        }
+    });
+
+    window.onload = vm.reload();
+
+
+</script>
+</body>
+</html>
