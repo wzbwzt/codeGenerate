@@ -38,20 +38,20 @@ const (
 	// 普通字段
 	protoFilePath          = "./template/proto.proto.tpl"
 	modelFilePath          = "./template/model.go.tpl"
-	serviceHandlerFilePath = "./template/service_handler.proto.tpl"
-	webHandlerFilePath     = "./template/web_handler.proto.tpl"
+	serviceHandlerFilePath = "./template/service_handler.go.tpl"
+	webHandlerFilePath     = "./template/web_handler.go.tpl"
 
 	//go protobuf字段
 	goProtoFilePath          = "./template/go_proto.proto.tpl"
 	goModelFilePath          = "./template/go_model.go.tpl"
-	goServiceHandlerFilePath = "./template/go_service_handler.proto.tpl"
-	goWebHandlerFilePath     = "./template/go_web_handler.proto.tpl"
+	goServiceHandlerFilePath = "./template/go_service_handler.go.tpl"
+	goWebHandlerFilePath     = "./template/go_web_handler.go.tpl"
 
 	//gogo protobuf字段
 	gogoProtoFilePath          = "./template/gogo_proto.proto.tpl"
 	gogoModelFilePath          = "./template/gogo_model.go.tpl"
-	gogoServiceHandlerFilePath = "./template/gogo_service_handler.proto.tpl"
-	gogoWebHandlerFilePath     = "./template/gogo_web_handler.proto.tpl"
+	gogoServiceHandlerFilePath = "./template/gogo_service_handler.go.tpl"
+	gogoWebHandlerFilePath     = "./template/gogo_web_handler.go.tpl"
 )
 
 func GenerateCode(c *gin.Context) {
@@ -67,20 +67,21 @@ func GenerateCode(c *gin.Context) {
 		return
 	}
 
-	gData := new(global.GenerateBody)
-	gData.TableMap = make(map[string]global.Table)
-	gData.ModelName = param.ModelName
-	gData.ConnectDb = param.ConnectDb
-
-	// 选择数据库字段转换类型
 	var (
-		typeMap           map[string]string
+		typeMap           map[string]string // 选择数据库字段转换类型
 		protoTpl          *template.Template
 		modelTpl          *template.Template
 		serviceHandlerTpl *template.Template
 		webHandlerTpl     *template.Template
 		wg                sync.WaitGroup
+		oneService        global.Service
 	)
+
+	oneService.ServiceName = param.ServiceName
+	gData := new(global.GenerateBody)
+	gData.TableMap = make(map[string]global.Table)
+	gData.ModelName = param.ModelName
+	gData.ConnectDb = param.ConnectDb
 
 	switch param.ProtoType {
 	case "normal":
@@ -158,18 +159,29 @@ func GenerateCode(c *gin.Context) {
 
 				bigHumpTableName = middle.IgnorePrefixAnd2Camel(param.IgnoreTablePreFix, tableName)
 				littleHumpTableName = middle.LowerFisrt(bigHumpTableName)
-				serviceName = bigHumpTableName + "Service"
+
 				createFunc = global.Func{FuncName: "Create" + bigHumpTableName, RequestName: "Create" + bigHumpTableName + "Request", ResponseName: "Create" + bigHumpTableName + "Response"}
 				readFunc = global.Func{FuncName: "Read" + bigHumpTableName, RequestName: "Read" + bigHumpTableName + "Request", ResponseName: "Read" + bigHumpTableName + "Response"}
 				updataFunc = global.Func{FuncName: "Update" + bigHumpTableName, RequestName: "Update" + bigHumpTableName + "Request", ResponseName: "Update" + bigHumpTableName + "Response"}
 				deleteFunc = global.Func{FuncName: "Delete" + bigHumpTableName, RequestName: "Delete" + bigHumpTableName + "Request", ResponseName: "Delete" + bigHumpTableName + "Response"}
 
-				service.ServiceName = serviceName
-				service.ServiceComment = tableComment
-				service.FuncList = append(service.FuncList, createFunc)
-				service.FuncList = append(service.FuncList, readFunc)
-				service.FuncList = append(service.FuncList, updataFunc)
-				service.FuncList = append(service.FuncList, deleteFunc)
+				//待优化 表服务名  单服务名
+				if param.ServiceNameType == 1 {
+					serviceName = bigHumpTableName + "Service"
+					service.ServiceName = serviceName
+					service.ServiceComment = tableComment
+					service.FuncList = append(service.FuncList, createFunc)
+					service.FuncList = append(service.FuncList, readFunc)
+					service.FuncList = append(service.FuncList, updataFunc)
+					service.FuncList = append(service.FuncList, deleteFunc)
+					gData.ServiceList = append(gData.ServiceList, service)
+				} else {
+					serviceName = param.ServiceName
+					oneService.FuncList = append(oneService.FuncList, createFunc)
+					oneService.FuncList = append(oneService.FuncList, readFunc)
+					oneService.FuncList = append(oneService.FuncList, updataFunc)
+					oneService.FuncList = append(oneService.FuncList, deleteFunc)
+				}
 
 				table.ModelName = gData.ModelName
 				table.ServiceName = serviceName
@@ -185,7 +197,6 @@ func GenerateCode(c *gin.Context) {
 				table.UpdateFunc = updataFunc
 				table.DeleteFunc = deleteFunc
 
-				gData.ServiceList = append(gData.ServiceList, service)
 				gData.TableMap[tableName] = table
 				gData.MsgList = append(gData.MsgList, createMsg(fieldList, table, param.IgnoreTablePreFix)...)
 			}
@@ -194,6 +205,13 @@ func GenerateCode(c *gin.Context) {
 
 	//等待表查询转换模板实体
 	wg.Wait()
+
+	//待优化 表服务名  单服务名
+	if param.ServiceNameType == 1 {
+
+	} else {
+		gData.ServiceList = append(gData.ServiceList, oneService)
+	}
 
 	//清除上次生成文件
 	_ = removeFiles("./res/proto/")
@@ -246,7 +264,8 @@ func generate(fileName string, tmpl *template.Template, body interface{}) {
 func removeFiles(dirPath string) error {
 	d, err := os.Open(dirPath)
 	if err != nil {
-		return err
+		//没有就新建
+		os.Mkdir(dirPath, os.ModePerm)
 	}
 	defer d.Close()
 	names, err := d.Readdirnames(-1)

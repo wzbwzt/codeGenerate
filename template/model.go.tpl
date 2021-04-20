@@ -46,22 +46,9 @@ func ({{.First}} *{{.BigHumpTableName}}) To{{.BigHumpTableName}}() (result *{{.M
 
 //新增{{.TableComment}}
 func ({{.First}} *{{.BigHumpTableName}}) New(req *{{.ModelName}}.{{.CreateFunc.RequestName}}) (err error) {
-    //检查{{.TableComment}}名称
-    //var cnt int
-    //if err = global.ServiceDB.Table({{.First}}.tableName()).Where("proj_id = ? and id != ? and rule_name = ?", req.ProjId, req.Id, req.ChargeRuleInfo.RuleName.Value).
-    //Count(&cnt).Error; err != nil {
-    //return err
-    //}
-    //if cnt > 0 {
-    //return global.ErrRuleNameExist
-    //}
+    //TODO 唯一性校验
 
     {{.First}} = {{.First}}.From{{.BigHumpTableName}}(req.{{.BigHumpTableName}}Info)
-    if err != nil {
-        logger.Error("新增收费规则数据处理错误:", err)
-        return err
-    }
-
 
     //{{.First}}.CreatedBy = req.CreatedBy
     if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).Create({{.First}}).Error; err != nil {
@@ -73,21 +60,10 @@ func ({{.First}} *{{.BigHumpTableName}}) New(req *{{.ModelName}}.{{.CreateFunc.R
 
 //修改{{.TableComment}}
 func ({{.First}} *{{.BigHumpTableName}}) Modify(req *{{.ModelName}}.{{.UpdateFunc.RequestName}}) (err error) {
-    //检查{{.TableComment}}名称
-    //var cnt int
-    //if err = global.ServiceDB.Table({{.First}}.tableName()).Where("proj_id = ? and id != ? and rule_name = ?", req.ProjId, req.Id, req.ChargeRuleInfo.RuleName.Value).
-    //Count(&cnt).Error; err != nil {
-    //return err
-    //}
-    //if cnt > 0 {
-    //return global.ErrRuleNameExist
-    //}
+    //TODO 唯一性校验
 
     {{.First}} = {{.First}}.From{{.BigHumpTableName}}(req.{{.BigHumpTableName}}Info)
-    //if err != nil {
-    //    logger.Error("修改{{.TableComment}}数据处理错误:", err)
-    //    return err
-    //}
+
     //{{.First}}.UpdatedBy = utils.GetFromInt64Value(req.UpdatedBy)
     {{.First}}.ID = uint(req.Id)
     if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).
@@ -127,13 +103,11 @@ func ({{.First}} *{{.BigHumpTableName}}) QueryAll(q *{{.ModelName}}.Query{{.BigH
     db := tx.Table({{.First}}.tableName())
     db = db.Where("proj_id = ?", projId)
 
-
-    //if q.RuleName != nil {
-    //db = db.Where("rule_name like ?", genValLikePattern(q.RuleName.Value))
-    //}
-    //if q.RuleModel != nil {
-    //db = db.Where("rule_model = ?", q.RuleModel.Value)
-    //}
+    //TODO 查询条件添加修改
+    {{range .ColList }}{{if eq .Ignore false}}//if q.Get{{.BigHumpColName}}() != nil {
+    //    db = db.Where("{{.ColName}} like ?", genValLikePattern(q.Get{{.BigHumpColName}}())) //{{.ColType}}
+    //}{{end}}
+    {{ end }}
 
     if len(q.GetOrderField()) > 0 {
         if utils.HasField({{.First}}, q.GetOrderField()) {

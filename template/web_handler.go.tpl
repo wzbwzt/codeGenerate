@@ -112,7 +112,7 @@ func Add{{.BigHumpTableName}}Handler(c *gin.Context) {
 
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
     defer cancel()
-    rsp, err := proto.{{.BigHumpTableName}}Service.{{.CreateFunc.FuncName}}(ctx, req)
+    rsp, err := proto.{{.ServiceName}}.{{.CreateFunc.FuncName}}(ctx, req)
     if err != nil {
         logger.Error("新增{{.TableComment}}处理失败:", err)
         resp.Code = global.ErrCodeInternal
@@ -159,7 +159,7 @@ func {{.UpdateFunc.FuncName}}Handler(c *gin.Context) {
 
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
     defer cancel()
-    rsp, err := proto.{{.BigHumpTableName}}Service.{{.UpdateFunc.FuncName}}(ctx, req)
+    rsp, err := proto.{{.ServiceName}}.{{.UpdateFunc.FuncName}}(ctx, req)
     if err != nil {
         logger.Error("修改{{.TableComment}}处理失败:", err)
         resp.Code = global.ErrCodeInternal
@@ -201,7 +201,7 @@ func {{.DeleteFunc.FuncName}}Handler(c *gin.Context) {
 
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
     defer cancel()
-    rsp, err := proto.{{.BigHumpTableName}}Service.{{.DeleteFunc.FuncName}}(ctx, req)
+    rsp, err := proto.{{.ServiceName}}.{{.DeleteFunc.FuncName}}(ctx, req)
     if err != nil {
         logger.Error("删除{{.TableComment}}处理失败:", err)
         resp.Code = global.ErrCodeInternal
@@ -247,7 +247,7 @@ func Query{{.BigHumpTableName}}InfoHandler(c *gin.Context) {
 
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
     defer cancel()
-    rsp, err := proto.{{.BigHumpTableName}}Service.{{.ReadFunc.FuncName}}(ctx, req)
+    rsp, err := proto.{{.ServiceName}}.{{.ReadFunc.FuncName}}(ctx, req)
     if err != nil {
         logger.Error("查询{{.TableComment}}详情处理失败:", err)
         resp.Code = global.ErrCodeInternal
@@ -303,7 +303,7 @@ func Query{{.BigHumpTableName}}ListHandler(c *gin.Context) {
 
     ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
     defer cancel()
-    rsp, err := proto.{{.BigHumpTableName}}Service.{{.ReadFunc.FuncName}}(ctx, req)
+    rsp, err := proto.{{.ServiceName}}.{{.ReadFunc.FuncName}}(ctx, req)
     if err != nil {
         logger.Error("查询{{.TableComment}}列表处理失败:", err)
         resp.Code = global.ErrCodeInternal

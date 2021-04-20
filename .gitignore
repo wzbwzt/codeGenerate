@@ -40,5 +40,8 @@ log.txt
 test/
 *.dat
 *_test.go
-res/
+res/model/*
+res/proto/*
+res/serviceHandler/*
+res/webHandler/*
 res.zip
