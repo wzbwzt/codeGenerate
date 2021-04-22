@@ -51,11 +51,12 @@ type Field struct {
 	LittleHumpColName string `json:"littleHumpColName"` //字段名称小驼峰 colName
 	ColType           string `json:"colType"`           //字段类型 varchar(128)
 	ColTypeName       string `json:"colTypeName"`       //字段类型
-	ColTypeNameBak    string `json:"colTypeNameBak"`    //goproto gogoproto 预留字段
+	ColTypeNameGo     string `json:"colTypeNameGo"`     //goproto gogoproto 预留字段
 	ColIsNull         string `json:"colIsNull"`         //非空 ""  "*"
 	ColComment        string `json:"colComment"`        //注释
-	Ignore            bool   `json:"ignore"`            //忽略
+	Ignore            bool   `json:"ignore"`            //忽略字段
 	Base              bool   `json:"base"`              //基础通用字段
+	Pointer           bool   `json:"pointer"`           //指针字段
 }
 
 // 生成实体忽略
@@ -68,10 +69,17 @@ var IgnoreCol = map[string]bool{
 // 生成model基础字段忽略
 var BaseCol = map[string]bool{
 	"id":         true,
+	"proj_id":    true,
 	"created_at": true,
 	"created_by": true,
 	"updated_at": true,
 	"updated_by": true,
 	"deleted_at": true,
 	"deleted_by": true,
+}
+
+var NonPointerCol = map[string]bool{
+	"proj_id":    true,
+	"created_at": true,
+	"updated_at": true,
 }

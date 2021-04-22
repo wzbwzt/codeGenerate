@@ -12,7 +12,6 @@ import (
     {{.ModelName}} "langmy.com/hatweb/proto/{{.ModelName}}"
 
     "github.com/gin-gonic/gin"
-    "github.com/google/martian/log"
     "github.com/micro/go-micro/v2/logger"
     "langmy.com/hatweb/global"
     "langmy.com/hatweb/proto"
@@ -93,7 +92,7 @@ func Add{{.BigHumpTableName}}Handler(c *gin.Context) {
 
     err := c.ShouldBindJSON(param)
     if err != nil {
-        log.Errorf("illegal body: %s", err)
+        logger.Errorf("illegal body: %s", err)
         resp.Code = global.ErrCodeParamInvalid
         resp.Msg = "参数无效"
         return
@@ -139,7 +138,7 @@ func {{.UpdateFunc.FuncName}}Handler(c *gin.Context) {
 
     err := c.ShouldBindJSON(param)
     if err != nil {
-        log.Errorf("illegal body: %s", err)
+        logger.Errorf("illegal body: %s", err)
         resp.Code = global.ErrCodeParamInvalid
         resp.Msg = "参数无效"
         return
@@ -189,7 +188,7 @@ func {{.DeleteFunc.FuncName}}Handler(c *gin.Context) {
 
     err := c.ShouldBindJSON(param)
     if err != nil {
-        log.Errorf("illegal body: %s", err)
+        logger.Errorf("illegal body: %s", err)
         resp.Code = global.ErrCodeParamInvalid
         resp.Msg = "参数无效"
         return
@@ -231,7 +230,7 @@ func Query{{.BigHumpTableName}}InfoHandler(c *gin.Context) {
 
     err := c.ShouldBindJSON(param)
     if err != nil {
-        log.Errorf("illegal body: %s", err)
+        logger.Errorf("illegal body: %s", err)
         resp.Code = global.ErrCodeParamInvalid
         resp.Msg = "参数无效"
         return
@@ -279,7 +278,7 @@ func Query{{.BigHumpTableName}}ListHandler(c *gin.Context) {
 
     err := c.ShouldBindJSON(param)
     if err != nil {
-    log.Errorf("illegal body: %s", err)
+    logger.Errorf("illegal body: %s", err)
         resp.Code = global.ErrCodeParamInvalid
         resp.Msg = "参数无效"
         return

@@ -88,8 +88,10 @@
             <input type="text" v-model="tableName" class="query-class" placeholder="表名"/>
 
             <button class="button-class" v-on:click="clearFilter">清空</button>
-            <button class="button-class" v-on:click="reload">刷新</button>
+            <button class="button-class" v-on:click="reset">重置</button>
             <button class="button-class" v-on:click="showModal">生成</button>
+
+            <span style="height: 2rem;line-height: 2rem;font-size: 1.5rem">已选：{{selectedList.length}}个</span>
         </div>
 
         <table style="">
@@ -129,7 +131,7 @@
             <input type="radio" class="form-item-radio" id="normal" value="normal" v-model="generateBody.protoType">
             <label for="normal" class="form-item-radio-label">普通</label>
             <input type="radio" class="form-item-radio" id="goproto" value="goproto"
-                   v-model="generateBody.protoType" disabled>
+                   v-model="generateBody.protoType" >
             <label for="goproto" class="form-item-radio-label">go-proto</label>
             <input type="radio" class="form-item-radio" id="gogoproto" value="gogoproto"
                    v-model="generateBody.protoType" disabled>
@@ -181,7 +183,7 @@
                 modelName: 'pkcenter',
                 connectDb: 'ServiceDB',
                 ignoreTablePrefix: 'pkcenter_',
-                protoType: 'normal',
+                protoType: 'goproto',
                 serviceNameType: 1,
                 serviceName: 'BasicService',
                 tableList: []
@@ -208,6 +210,9 @@
                         }
                     }
                 };
+            },
+            reset(){
+                location.reload();
             },
             clearFilter() {
                 vm.tableName = '';
@@ -273,7 +278,7 @@
                             vm.tableShow = true;
                             alert('代码生成成功，查看res.zip文件');
                         }else{
-                            alert('代码生成失败，查看后台日志');
+                            alert('代码生成失败，查看后台日志，错误信息：'+res.msg);
                         }
                     }
                 };

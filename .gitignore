@@ -44,4 +44,6 @@ res/model/*
 res/proto/*
 res/serviceHandler/*
 res/webHandler/*
+res/markdown/*
+res/vue/*
 res.zip

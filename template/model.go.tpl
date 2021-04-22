@@ -46,7 +46,15 @@ func ({{.First}} *{{.BigHumpTableName}}) To{{.BigHumpTableName}}() (result *{{.M
 
 //新增{{.TableComment}}
 func ({{.First}} *{{.BigHumpTableName}}) New(req *{{.ModelName}}.{{.CreateFunc.RequestName}}) (err error) {
-    //TODO 唯一性校验
+    //TODO 唯一性校验，修改name为对应字段，不需要则去除
+    var cnt int
+    if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).Where("proj_id = ? and name = ?", req.{{.BigHumpTableName}}Info.GetProjId(), req.{{.BigHumpTableName}}Info.GetName()).
+        Count(&cnt).Error; err != nil {
+        return err
+    }
+    if cnt > 0 {
+        return global.ErrAlreadyExist
+    }
 
     {{.First}} = {{.First}}.From{{.BigHumpTableName}}(req.{{.BigHumpTableName}}Info)
 
@@ -61,6 +69,14 @@ func ({{.First}} *{{.BigHumpTableName}}) New(req *{{.ModelName}}.{{.CreateFunc.R
 //修改{{.TableComment}}
 func ({{.First}} *{{.BigHumpTableName}}) Modify(req *{{.ModelName}}.{{.UpdateFunc.RequestName}}) (err error) {
     //TODO 唯一性校验
+    var cnt int
+    if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).Where("proj_id = ? and id != ? and name = ?", req.{{.BigHumpTableName}}Info.GetProjId(), req.Id, req.{{.BigHumpTableName}}Info.GetName()).
+        Count(&cnt).Error; err != nil {
+        return err
+    }
+    if cnt > 0 {
+        return global.ErrRuleNameExist
+    }
 
     {{.First}} = {{.First}}.From{{.BigHumpTableName}}(req.{{.BigHumpTableName}}Info)
 

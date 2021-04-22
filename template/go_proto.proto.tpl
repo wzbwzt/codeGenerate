@@ -1,10 +1,9 @@
 syntax = "proto3";
-
-package {{.Models}};
-
+option go_package = ".;{{.ModelName}}";
+package go.micro.service.{{.ModelName}};
 import "google/protobuf/wrappers.proto";
 
-
+//在当前文件位置执行 protoc --micro_out=. --go_out=. {{.ModelName}}.proto
 // 返回统一字段
 enum ErrCode {
   OK = 0; //成功
@@ -19,22 +18,31 @@ enum ErrCode {
   SYSTEM_WRONG = 9; //系统错误
 }
 
-
 message CommonReturn {
   ErrCode code = 1; // 错误码
   string reason = 2; // 详细错误信息
 }
 
-// The {{.Models}} service definition.
-service {{.Name}} {
- {{range .Funcs }} rpc {{.Name}}({{.RequestName}}) returns ({{.ResponseName}}) {}
-{{ end }}
+// 按ID数字查找目标
+message QueryByID {
+  int64 id = 1;
 }
 
 
-{{range .MessageList }}
-message {{.Name}} {
-{{range .MessageDetail }} {{.TypeName}} {{.AttrName}}={{.Num}};
+
+{{range .ServiceList}}
+// {{.ServiceComment}}
+service {{.ServiceName}} {
+{{range .FuncList }}    rpc {{.FuncName}}({{.RequestName}}) returns ({{.ResponseName}}) {}
 {{ end }}
 }
 {{ end }}
+
+{{range .MsgList }}
+message {{ .MsgName }} {
+{{range .FieldList }}    {{if eq .Ignore false}}google.protobuf.{{end}}{{.ColTypeName}} {{.ColName}}{{if eq .Base false}}={{.ColNum}};{{end}}//{{.ColComment}}
+{{ end }}
+}
+{{ end }}
+
+

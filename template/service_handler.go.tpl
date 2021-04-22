@@ -17,13 +17,13 @@ type {{.ServiceName}} struct {
     *model.{{.BigHumpTableName}}
 }
 
-func (s *{{.ServiceName}}) Create(ctx context.Context, req *{{.ModelName}}.{{.CreateFunc.RequestName}}, rsp *{{.ModelName}}.{{.CreateFunc.ResponseName}}) error {
+func (s *{{.ServiceName}}) {{.CreateFunc.FuncName}}(ctx context.Context, req *{{.ModelName}}.{{.CreateFunc.RequestName}}, rsp *{{.ModelName}}.{{.CreateFunc.ResponseName}}) error {
     logger.Debug("Received {{.ServiceName}}.{{.CreateFunc.RequestName}} request")
     if err := s.New(req); err != nil {
         if err == global.ErrAlreadyExist {
             rsp.Ret = &{{.ModelName}}.CommonReturn{
                 Code:   -1,
-                Reason: err.Error(),
+                Reason: "{{.TableComment}}"+err.Error(),
             }
         return nil
         }
@@ -32,10 +32,10 @@ func (s *{{.ServiceName}}) Create(ctx context.Context, req *{{.ModelName}}.{{.Cr
     return nil
 }
 
-func (s *{{.ServiceName}}) Update(ctx context.Context, req *{{.ModelName}}.{{.UpdateFunc.RequestName}}, rsp *{{.ModelName}}.{{.UpdateFunc.ResponseName}}) error {
+func (s *{{.ServiceName}}) {{.UpdateFunc.FuncName}}(ctx context.Context, req *{{.ModelName}}.{{.UpdateFunc.RequestName}}, rsp *{{.ModelName}}.{{.UpdateFunc.ResponseName}}) error {
     logger.Debug("Received {{.ServiceName}}.{{.UpdateFunc.RequestName}} request")
     if err := s.Modify(req); err != nil {
-        if err == global.ErrRuleNameExist {
+        if err == global.ErrAlreadyExist {
             rsp.Ret = &{{.ModelName}}.CommonReturn{
                 Code:   -1,
                 Reason: err.Error(),
@@ -47,7 +47,7 @@ func (s *{{.ServiceName}}) Update(ctx context.Context, req *{{.ModelName}}.{{.Up
     return nil
 }
 
-func (s *{{.ServiceName}}) Delete(ctx context.Context, req *{{.ModelName}}.{{.DeleteFunc.RequestName}}, rsp *{{.ModelName}}.{{.DeleteFunc.ResponseName}}) error {
+func (s *{{.ServiceName}}) {{.DeleteFunc.FuncName}}(ctx context.Context, req *{{.ModelName}}.{{.DeleteFunc.RequestName}}, rsp *{{.ModelName}}.{{.DeleteFunc.ResponseName}}) error {
     logger.Debug("Received {{.ServiceName}}.{{.DeleteFunc.RequestName}} request")
     if err := s.Remove(req); err != nil {
         return errors.InternalServerError(s.S.Name(), err.Error())
@@ -55,7 +55,7 @@ func (s *{{.ServiceName}}) Delete(ctx context.Context, req *{{.ModelName}}.{{.De
     return nil
 }
 
-func (s *{{.ServiceName}}) Read(ctx context.Context, req *{{.ModelName}}.{{.ReadFunc.RequestName}}, rsp *{{.ModelName}}.Read{{.BigHumpTableName}}Response) error {
+func (s *{{.ServiceName}}) {{.ReadFunc.FuncName}}(ctx context.Context, req *{{.ModelName}}.{{.ReadFunc.RequestName}}, rsp *{{.ModelName}}.Read{{.BigHumpTableName}}Response) error {
     logger.Debug("Received {{.ServiceName}}.{{.ReadFunc.RequestName}} request")
     cb := func(total int32, rs interface{}) error {
     rsp.Total = total

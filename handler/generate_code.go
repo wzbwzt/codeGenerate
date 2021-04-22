@@ -52,6 +52,13 @@ const (
 	gogoModelFilePath          = "./template/gogo_model.go.tpl"
 	gogoServiceHandlerFilePath = "./template/gogo_service_handler.go.tpl"
 	gogoWebHandlerFilePath     = "./template/gogo_web_handler.go.tpl"
+
+	//markdown
+	tableMdFilePath = "./template/table_struct.md.tpl"
+	apiMdFilePath   = "./template/api.md.tpl"
+
+	//vue
+	vueFilePath = "./template/table.vue.tpl"
 )
 
 func GenerateCode(c *gin.Context) {
@@ -63,25 +70,35 @@ func GenerateCode(c *gin.Context) {
 	if err != nil {
 		log.Errorf("illegal body: %s", err)
 		resp.Code = global.ErrCodeParamInvalid
-		resp.Msg = "invalid body"
+		resp.Msg = "参数解析失败"
 		return
 	}
 
 	var (
+		gData             *global.GenerateBody
 		typeMap           map[string]string // 选择数据库字段转换类型
+		goTypeMap         map[string]string //数据库字段转go类型
 		protoTpl          *template.Template
 		modelTpl          *template.Template
 		serviceHandlerTpl *template.Template
 		webHandlerTpl     *template.Template
+		tableMdTpl        *template.Template
+		apiMdTpl          *template.Template
 		wg                sync.WaitGroup
 		oneService        global.Service
+		//vueTpl            *template.Template
 	)
 
 	oneService.ServiceName = param.ServiceName
-	gData := new(global.GenerateBody)
+	gData = new(global.GenerateBody)
 	gData.TableMap = make(map[string]global.Table)
 	gData.ModelName = param.ModelName
 	gData.ConnectDb = param.ConnectDb
+	goTypeMap = global.NormalType
+
+	tableMdTpl, _ = template.ParseFiles(tableMdFilePath)
+	apiMdTpl, _ = template.ParseFiles(apiMdFilePath)
+	//vueTpl, err = template.ParseFiles(vueFilePath)
 
 	switch param.ProtoType {
 	case "normal":
@@ -91,14 +108,14 @@ func GenerateCode(c *gin.Context) {
 		serviceHandlerTpl, _ = template.ParseFiles(serviceHandlerFilePath)
 		webHandlerTpl, _ = template.ParseFiles(webHandlerFilePath)
 		break
-	case "go": //TODO 待实现
-		//typeMap = global.GoType
-		//protoTpl,_ = template.ParseFiles(goProtoFilePath)
-		//modelTpl,_ = template.ParseFiles(goModelFilePath)
-		//serviceHandlerTpl,_ = template.ParseFiles(goServiceHandlerFilePath)
-		//webHandlerTpl,_ = template.ParseFiles(goWebHandlerFilePath)
-		//break
-	case "gogo": // 考虑实现
+	case "goproto":
+		typeMap = global.GoType
+		protoTpl, _ = template.ParseFiles(goProtoFilePath)
+		modelTpl, _ = template.ParseFiles(goModelFilePath)
+		serviceHandlerTpl, _ = template.ParseFiles(goServiceHandlerFilePath)
+		webHandlerTpl, _ = template.ParseFiles(goWebHandlerFilePath)
+		break
+	case "gogoproto": // 考虑实现
 		//typeMap = global.GoGoType
 		//protoTpl,_ = template.ParseFiles(gogoProtoFilePath)
 		//modelTpl,_ = template.ParseFiles(gogoModelFilePath)
@@ -139,6 +156,7 @@ func GenerateCode(c *gin.Context) {
 				for _, col := range tableColList {
 					_, ignoreOk := global.IgnoreCol[col.ColName]
 					_, baseOk := global.BaseCol[col.ColName]
+					_, pointerOk := global.NonPointerCol[col.ColName]
 
 					field := global.Field{
 						ColNum:            i,
@@ -147,11 +165,12 @@ func GenerateCode(c *gin.Context) {
 						LittleHumpColName: middle.LowerFisrt(middle.Case2Camel(col.ColName)),
 						ColType:           col.ColType,
 						ColTypeName:       typeMap[col.DataType],
-						ColTypeNameBak:    "",
+						ColTypeNameGo:     goTypeMap[col.DataType],
 						ColIsNull:         col.IsNull,
 						ColComment:        col.ColComment,
 						Ignore:            ignoreOk,
 						Base:              baseOk,
+						Pointer:           !pointerOk && !ignoreOk, //指针非忽略
 					}
 					fieldList = append(fieldList, field)
 					i++
@@ -218,6 +237,8 @@ func GenerateCode(c *gin.Context) {
 	_ = removeFiles("./res/model/")
 	_ = removeFiles("./res/serviceHandler/")
 	_ = removeFiles("./res/webHandler/")
+	_ = removeFiles("./res/markdown/")
+	_ = removeFiles("./res/vue/")
 
 	//生成文件 model serviceHandler webHandler
 	for _, tableParam := range param.TableList {
@@ -229,9 +250,15 @@ func GenerateCode(c *gin.Context) {
 			generate("./res/model/"+ignorePreFixName+".go", modelTpl, gData.TableMap[tableName])
 			generate("./res/serviceHandler/"+ignorePreFixName+".go", serviceHandlerTpl, gData.TableMap[tableName])
 			generate("./res/webHandler/"+ignorePreFixName+".go", webHandlerTpl, gData.TableMap[tableName])
+			generate("./res/markdown/"+ignorePreFixName+".md", apiMdTpl, gData.TableMap[tableName])
+
+			//TODO go template识别字符与vue冲突 {{}} $
+			//generate("./res/vue/"+gData.TableMap[tableName].BigHumpTableName+".vue", vueTpl, gData.TableMap[tableName])
 		}(tableParam.TableName)
 	}
 
+	//生成md
+	generate("./res/markdown/"+gData.ModelName+".md", tableMdTpl, gData)
 	//生成proto
 	generate("./res/proto/"+gData.ModelName+".proto", protoTpl, gData)
 
@@ -335,24 +362,28 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 		ColName:     "id",
 		ColTypeName: "int64",
 		ColComment:  "pk",
+		Ignore:      true,
 	}
 	idField2 := global.Field{
 		ColNum:      2,
 		ColName:     "id",
 		ColTypeName: "int64",
 		ColComment:  "pk",
+		Ignore:      true,
 	}
 	returnField := global.Field{
 		ColNum:      1,
 		ColName:     "ret",
 		ColTypeName: "CommonReturn",
 		ColComment:  "回复",
+		Ignore:      true,
 	}
 	infoField := global.Field{
 		ColNum:      1,
 		ColName:     ignorePreFixName + "_info",
 		ColTypeName: table.BigHumpTableName + "Info",
 		ColComment:  table.TableComment + "详情",
+		Ignore:      true,
 	}
 	queryField := global.Field{
 		ColNum:      1,
@@ -360,18 +391,21 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 		ColTypeName: "oneof",
 		Base:        true, //复用
 		ColComment:  "回复",
+		Ignore:      true,
 	}
 	repeatedInfoField := global.Field{
 		ColNum:      2,
 		ColName:     ignorePreFixName,
 		ColTypeName: "repeated " + table.BigHumpTableName,
 		ColComment:  table.TableComment,
+		Ignore:      true,
 	}
 	totalField := global.Field{
 		ColNum:      3,
 		ColName:     "total",
 		ColTypeName: "int32",
 		ColComment:  "数量",
+		Ignore:      true,
 	}
 
 	returnFieldList := []global.Field{returnField}
@@ -392,7 +426,7 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 				LittleHumpColName: field.LittleHumpColName,
 				ColType:           field.ColType,
 				ColTypeName:       field.ColTypeName,
-				ColTypeNameBak:    "",
+				ColTypeNameGo:     field.ColTypeNameGo,
 				ColIsNull:         field.ColIsNull,
 				ColComment:        field.ColComment,
 				Ignore:            ignoreOk,
@@ -409,24 +443,28 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 		ColName:     "offset",
 		ColTypeName: "int32",
 		ColComment:  "页码",
+		Ignore:      true,
 	}
 	countField := global.Field{
 		ColNum:      i + 1,
 		ColName:     "count",
 		ColTypeName: "int32",
 		ColComment:  "每页数量",
+		Ignore:      true,
 	}
 	orderField := global.Field{
 		ColNum:      i + 2,
 		ColName:     "order_field",
 		ColTypeName: "string",
 		ColComment:  "排序字段",
+		Ignore:      true,
 	}
 	ascField := global.Field{
 		ColNum:      i + 3,
 		ColName:     "ascend",
 		ColTypeName: "bool",
 		ColComment:  "排序方式",
+		Ignore:      true,
 	}
 	queryAllList = append(queryAllList, offsetField)
 	queryAllList = append(queryAllList, countField)
@@ -483,10 +521,17 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 	}
 
 	//删除
-	idFieldList := []global.Field{idField}
+	deleteField := global.Field{
+		ColNum:      2,
+		ColName:     "deleted_by",
+		ColTypeName: "int64",
+		ColComment:  "删除人",
+		Ignore:      true,
+	}
+	deleteList := []global.Field{idField, deleteField}
 	dRep := global.Message{
 		MsgName:   table.DeleteFunc.RequestName,
-		FieldList: idFieldList,
+		FieldList: deleteList,
 	}
 	dResp := global.Message{
 		MsgName:   table.DeleteFunc.ResponseName,
