@@ -3,7 +3,7 @@
 - 查询{{.TableComment}}列表
 
 **请求URL：** 
-- ` http://xx.com/api/v1/自定义/{{.LittleHumpTableName}}/list `
+- ` http://xx.com/api/v1/park/{{.LittleHumpTableName}}/list `
 **请求方式：**
 - POST 
 
@@ -13,7 +13,7 @@
 |:----    |:---|:----- |-----   |
 | pagination   | 是 | String  | 分页信息  {"pageSize":10,"current":1}  |
 | sorter       | 是 | String  | 排序信息：1-正序，0-倒叙 {"field":"","order":0} |
-{{range .ColList }}{{if eq .Ignore false}}|{{.ColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
+{{range .ColList }}{{if eq .Ignore false}}|{{.LittleHumpColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
 {{end}}
 
 **响应参数：** 
@@ -27,7 +27,7 @@
 |参数名|必选|类型|说明|
 |:----    |:---|:----- |-----   |
 |id       |是  |string|LED id   |
-{{range .ColList }}{{if eq .Ignore false}}|{{.ColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
+{{range .ColList }}{{if eq .Ignore false}}|{{.LittleHumpColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
 {{end}}
 
 **返回示例**
@@ -52,7 +52,7 @@
 - 新增{{.TableComment}}
 
 **请求URL：** 
-- ` http://xx.com/api/v1/carConfig/自定义/{{.LittleHumpTableName}}/add`
+- ` http://xx.com/api/v1/carConfig/park/{{.LittleHumpTableName}}/add`
   
 **请求方式：**
 - POST 
@@ -61,7 +61,7 @@
 
 |参数名|必选|类型|说明|
 |:----    |:---|:----- |-----   |
-{{range .ColList }}{{if eq .Ignore false}}|{{.ColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
+{{range .ColList }}{{if eq .Ignore false}}|{{.LittleHumpColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
 {{end}}
 
  **返回示例**
@@ -91,7 +91,7 @@
 - 修改{{.TableComment}}
 
 **请求URL：** 
-- ` http://xx.com/api/v1/自定义/{{.LittleHumpTableName}}/update`
+- ` http://xx.com/api/v1/park/{{.LittleHumpTableName}}/update`
   
 **请求方式：**
 - POST 
@@ -101,7 +101,7 @@
 |参数名|必选|类型|说明|
 |:----    |:---|:----- |-----   |
 |id   |是  |string |led id |
-{{range .ColList }}{{if eq .Ignore false}}|{{.ColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
+{{range .ColList }}{{if eq .Ignore false}}|{{.LittleHumpColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
 {{end}}
 
  **返回示例**
@@ -131,7 +131,7 @@
 - {{.TableComment}}详情
 
 **请求URL：** 
-- ` http://xx.com/api/v1/自定义/{{.LittleHumpTableName}}/info`
+- ` http://xx.com/api/v1/park/{{.LittleHumpTableName}}/info`
   
 **请求方式：**
 - POST 
@@ -147,7 +147,7 @@
 |参数名|必选|类型|说明|
 |:----    |:---|:----- |-----   |
 |id   |是  |string |led id |
-{{range .ColList }}{{if eq .Ignore false}}|{{.ColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
+{{range .ColList }}{{if eq .Ignore false}}|{{.LittleHumpColName}}       |{{if eq .ColIsNull "YES"}}是{{else}}否 {{end}}  |{{.ColTypeNameGo}}|{{.ColComment}}   |{{end}}
 {{end}}
 
  **返回示例**
@@ -177,7 +177,7 @@
 - 删除{{.TableComment}}
 
 **请求URL：** 
-- ` http://xx.com/api/v1/自定义/{{.LittleHumpTableName}}/delete`
+- ` http://xx.com/api/v1/park/{{.LittleHumpTableName}}/delete`
   
 **请求方式：**
 - POST 

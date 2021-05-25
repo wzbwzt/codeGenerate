@@ -54,7 +54,7 @@ type {{.BigHumpTableName}}ListResult struct {
 func ({{.First}} {{.BigHumpTableName}}Info) ToProtobufModel() (result *{{.ModelName}}.{{.BigHumpTableName}}Info) {
 
     result = &{{.ModelName}}.{{.BigHumpTableName}}Info{
-        ProjId:  utils.CreateInt64ValuePtr(a.ProjId),
+        ProjId:  utils.CreateInt64ValuePtr({{$First}}.ProjId),
         {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}:  utils.Create{{.ColTypeName}}Ptr({{$First}}.{{.BigHumpColName}}),{{end}}
         {{ end }}
     }

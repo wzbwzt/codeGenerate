@@ -38,7 +38,7 @@ func (s *{{.ServiceName}}) {{.UpdateFunc.FuncName}}(ctx context.Context, req *{{
         if err == global.ErrAlreadyExist {
             rsp.Ret = &{{.ModelName}}.CommonReturn{
                 Code:   -1,
-                Reason: err.Error(),
+                Reason: "{{.TableComment}}"+err.Error(),
             }
         return nil
         }

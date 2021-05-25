@@ -41,9 +41,9 @@ func ({{.First}} *{{.BigHumpTableName}}) To{{.BigHumpTableName}}() (result *{{.M
     result = &{{.ModelName}}.{{.BigHumpTableName}}{
         Id: int64({{.First}}.ID),
         {{.BigHumpTableName}}Info: &{{.ModelName}}.{{.BigHumpTableName}}Info{
-            ProjId: utils.CreateInt64Value(a.ProjId),
-            CreatedAt: utils.CreateStringValue(a.CreatedAt.Format(time.RFC3339)),
-            UpdatedAt: utils.CreateStringValue(a.UpdatedAt.Format(time.RFC3339)),
+            ProjId: utils.CreateInt64Value({{$First}}.ProjId),
+            CreatedAt: utils.CreateStringValue({{$First}}.CreatedAt.Format(time.RFC3339)),
+            UpdatedAt: utils.CreateStringValue({{$First}}.UpdatedAt.Format(time.RFC3339)),
             {{range .ColList }}{{if .Pointer}}{{.BigHumpColName}}: utils.Create{{.ColTypeName}}Ptr({{$First}}.{{.BigHumpColName}}),{{end}}
             {{ end }}
         },
@@ -68,7 +68,7 @@ func ({{.First}} *{{.BigHumpTableName}}) New(req *{{.ModelName}}.{{.CreateFunc.R
 
     // BaseModel 字段
     now :=time.Now()
-    {{.First}}.ProjId = *utils.GetFromInt64Value(req.AreaInfo.ProjId)
+    {{.First}}.ProjId = *utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.ProjId)
     {{.First}}.CreatedBy = utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.CreatedBy)
     {{.First}}.UpdatedBy = utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.UpdatedBy)
     {{.First}}.CreatedAt = now
@@ -97,7 +97,7 @@ func ({{.First}} *{{.BigHumpTableName}}) Modify(req *{{.ModelName}}.{{.UpdateFun
 
     now :=time.Now()
     {{.First}}.ID = uint(req.Id)
-    {{.First}}.ProjId = *utils.GetFromInt64Value(req.AreaInfo.ProjId)
+    {{.First}}.ProjId = *utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.ProjId)
     {{.First}}.UpdatedBy = utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.UpdatedBy)
     {{.First}}.UpdatedAt = now
 

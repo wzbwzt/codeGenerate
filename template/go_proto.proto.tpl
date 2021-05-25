@@ -3,6 +3,16 @@ option go_package = ".;{{.ModelName}}";
 package go.micro.service.{{.ModelName}};
 import "google/protobuf/wrappers.proto";
 
+//{{range .ServiceList}}{{.ServiceName}}   pkcenter.{{.ServiceName}}
+//{{end}}
+
+//{{range .ServiceList}}{{.ServiceName}} = pkcenter.New{{.ServiceName}}(PkCenterServiceName, client.DefaultClient)
+//{{end}}
+
+//_ = chargerule.RegisterHolidayServiceHandler(service.Server(), new(handler.HolidayService))
+//{{range .ServiceList}}_= pkcenter.Register{{.ServiceName}}Handler(service.Server(), new(handler.{{.ServiceName}}))
+//{{end}}
+
 //在当前文件位置执行 protoc --micro_out=. --go_out=. {{.ModelName}}.proto
 // 返回统一字段
 enum ErrCode {
