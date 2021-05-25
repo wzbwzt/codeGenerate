@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MDTable转proto</title>
+    <style>
+        .text-box {
+            flex: 4;
+            height: 70%;
+            padding: 2%;
+            display: inline-block;
+        }
+
+        .center-box {
+            flex: 2;
+            height: 70%;
+            padding: 1%;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .button-class {
+            /*width: 10%;*/
+            height: 2.5rem;
+            margin: 1% 0.5%;
+            line-height: 1.8rem;
+            font-size: 1.5rem;
+            background-color: #79c2ff;
+            border: 2px solid #79c2ff;
+            border-radius: 5px;
+        }
+
+        .input-box {
+            margin: 1rem 0 0.5rem 0;
+            float: right;
+        }
+
+
+    </style>
+</head>
+<body>
+<div id="container" style="display: flex">
+    <div class="text-box">
+        <textarea style="width: 100%" rows="40" v-model="tableText"></textarea>
+    </div>
+
+    <div class="center-box">
+        <div>
+            <button class="button-class" v-on:click="jumpTab('/index.html')">回到生成代码</button>
+        </div>
+        <div class="input-box">总列数 ：<input type="number" v-model="colNum"/></div>
+        <div class="input-box">字段列数：<input type="number" v-model="nameColNum"/></div>
+        <div class="input-box">类型列数：<input type="number" v-model="typeColNum"/></div>
+        <div class="input-box">备注列数：<input type="number" v-model="remarkColNum"/></div>
+        <div>
+            <button class="button-class" v-on:click="tableToProto">table转proto</button>
+        </div>
+    </div>
+
+    <div class="text-box">
+        <textarea style="width: 100%" rows="40" v-model="protoText"></textarea>
+    </div>
+</div>
+
+<script type="text/javascript" src="./js/vue.min.js"></script>
+<script type="text/javascript">
+    let vm = new Vue({
+        el: '#container',
+        data: {
+            tableText: '',
+            protoText: '',
+            tableCol: [],
+            typeColNum: 3,
+            nameColNum: 1,
+            remarkColNum: 4,
+            colNum: 4,
+            typeChange: {
+                int: 'int64',
+                string: 'string',
+                boolean: 'bool',
+                bigint: 'int64',
+                datatime: 'string',
+                tinyint: 'int64',
+                float: 'double'
+            }
+        },
+
+        methods: {
+
+            tableToProto() {
+                if (vm.tableText === '') {
+                    return
+                }
+                console.log(vm.tableText);
+                vm.tableCol = vm.tableText.split(/[\s\n]/);
+                console.log(vm.tableCol);
+                if ((vm.tableCol.length % vm.colNum) !== 0 &&
+                    (vm.tableCol.length % vm.colNum) === (vm.colNum - 1)) {
+                    vm.tableCol.push('')
+                }
+
+                let rowIndex = 1;
+                let content = '';
+                let rowTotal = vm.tableCol.length / vm.colNum;
+                let typeColNum = vm.typeColNum - 1;
+                let nameColNum = vm.nameColNum - 1;
+                let remarkColNum = vm.remarkColNum - 1;
+                for (let i = 0; i < rowTotal; i++) {
+                    content += `${vm.typeChange[vm.tableCol[i * vm.colNum + typeColNum]]} ${vm.toLine(vm.tableCol[i * vm.colNum + nameColNum])} = ${rowIndex};//${vm.tableCol[i * vm.colNum + remarkColNum]}\n`;
+                    rowIndex++
+                }
+
+
+                vm.protoText = content
+
+            },
+            // 下划线转换驼峰
+            toHump(name) {
+                return name.replace(/\_(\w)/g, function (all, letter) {
+                    return letter.toUpperCase();
+                });
+            },
+            // 驼峰转换下划线
+            toLine(name) {
+                return name.replace(/([A-Z])/g, "_$1").toLowerCase();
+            },
+            jumpTab(suffix) {
+                window.location.href = window.location.origin + suffix
+            },
+        }
+    })
+</script>
+</body>
+</html>

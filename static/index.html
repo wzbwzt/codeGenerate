@@ -79,6 +79,17 @@
         .form-item-radio-label {
             width: 10%;
         }
+
+        .jump-box{
+            float: right;
+            height: 2.5rem;
+            margin: 1% 0.5%;
+            line-height: 1.8rem;
+            font-size: 1.5rem;
+            background-color: #79c2ff;
+            border: 2px solid #79c2ff;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body style="border-radius: 5px;border: 5px solid gray">
@@ -92,6 +103,7 @@
             <button class="button-class" v-on:click="showModal">生成</button>
 
             <span style="height: 2rem;line-height: 2rem;font-size: 1.5rem">已选：{{selectedList.length}}个</span>
+            <button class="jump-box" v-on:click="jumpTab('/table-proto.html')">MDTable转proto</button>
         </div>
 
         <table style="">
@@ -213,6 +225,9 @@
             },
             reset(){
                 location.reload();
+            },
+            jumpTab(suffix){
+                window.location.href = window.location.origin+suffix
             },
             clearFilter() {
                 vm.tableName = '';
