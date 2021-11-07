@@ -1,162 +1,211 @@
 package model
 
-{{$First := .First}}
-import (
+{* {{$First := .First}} *}
+{* import (
     "{{.ModelName}}/global"
     {{.ModelName}} "{{.ModelName}}/proto/{{.ModelName}}"
     "{{.ModelName}}/utils"
     "fmt"
-    "github.com/jinzhu/gorm"
+    "gorm.io/gorm"
 
     "time"
     "github.com/micro/go-micro/v2/logger"
-)
+) *}
 
-type {{.BigHumpTableName}} struct{
-    BaseModel
-    {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}  *{{.ColTypeNameGo}} `gorm:"type:{{.ColType}} comment '{{.ColComment}}'"`  //{{.ColComment}}{{end}}
+{* type {{.BigHumpTableName}} struct{
+    gorm.Model
+    {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}  {{.ColTypeNameGo}} `gorm:"type:{{.ColType}};not null; comment:{{.ColComment}}"`  //{{.ColComment}}{{end}}
     {{ end }}
-}
+} *}
 
 
-func ({{.First}} *{{.BigHumpTableName}}) tableName() string {
+{* func ({{.First}} {{.BigHumpTableName}}) tableName() string {
     return "{{.TableName}}"
-}
+} *}
 
-func ({{.First}} {{.BigHumpTableName}}) migrate(db *gorm.DB) error {
-    return db.Table({{.First}}.tableName()).AutoMigrate(&{{.First}}).Error
-}
 
-func ({{.First}} *{{.BigHumpTableName}}) From{{.BigHumpTableName}}(info *{{.ModelName}}.{{.BigHumpTableName}}Info) (result *{{.BigHumpTableName}}) {
+{* func ({{.First}} *{{.BigHumpTableName}}) From{{.BigHumpTableName}}(info *{{.ModelName}}.{{.BigHumpTableName}}Info) (result *{{.BigHumpTableName}}) {
     // BaseModel 字段在New Modify Delete添加
     result = &{{.BigHumpTableName}}{
-        {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}: utils.GetFrom{{.ColTypeName}}(info.{{.BigHumpColName}}),{{end}}
+        ID: int64(info.ID),
+        {{range .ColList }}
+            {{if eq .Base false}}{{.BigHumpColName}}: info.{{.BigHumpColName}},{{end}}
         {{ end }}
     }
     return
-}
+} *}
 
-func ({{.First}} *{{.BigHumpTableName}}) To{{.BigHumpTableName}}() (result *{{.ModelName}}.{{.BigHumpTableName}}) {
+{* func ({{.First}} *{{.BigHumpTableName}}) To{{.BigHumpTableName}}() (result *{{.ModelName}}.{{.BigHumpTableName}}) {
     // Todo 除了基础字段的时间类型 其他时间字段需要自行加上.Format(time.RFC3339) 没有可以忽略
     result = &{{.ModelName}}.{{.BigHumpTableName}}{
         Id: int64({{.First}}.ID),
         {{.BigHumpTableName}}Info: &{{.ModelName}}.{{.BigHumpTableName}}Info{
-            ProjId: utils.CreateInt64Value({{$First}}.ProjId),
-            CreatedAt: utils.CreateStringValue({{$First}}.CreatedAt.Format(time.RFC3339)),
-            UpdatedAt: utils.CreateStringValue({{$First}}.UpdatedAt.Format(time.RFC3339)),
-            {{range .ColList }}{{if .Pointer}}{{.BigHumpColName}}: utils.Create{{.ColTypeName}}Ptr({{$First}}.{{.BigHumpColName}}),{{end}}
+            //ProjId: utils.CreateInt64Value({{$First}}.ProjId),
+            //CreatedAt: utils.CreateStringValue({{$First}}.CreatedAt.Format(time.RFC3339)),
+            //UpdatedAt: utils.CreateStringValue({{$First}}.UpdatedAt.Format(time.RFC3339)),
+            {{range .ColList }}{{if .Pointer}}{{.BigHumpColName}}: ({{.First}}.{{.BigHumpColName}}),{{end}}
             {{ end }}
         },
     }
     return
-}
+} *}
 
 
-//新增{{.TableComment}}
-func ({{.First}} *{{.BigHumpTableName}}) New(req *{{.ModelName}}.{{.CreateFunc.RequestName}}) (err error) {
-    //TODO 唯一性校验，修改name为对应字段，不需要则去除
-    //var cnt int
-    //if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).Where("proj_id = ? and name = ?", req.{{.BigHumpTableName}}Info.ProjId.Value, req.{{.BigHumpTableName}}Info.Name.Value).
-    //    Count(&cnt).Error; err != nil {
-    //    return err
-    //}
-    //if cnt > 0 {
-    //    return global.ErrAlreadyExist
-    //}
-
-    {{.First}} = {{.First}}.From{{.BigHumpTableName}}(req.{{.BigHumpTableName}}Info)
-
-    // BaseModel 字段
-    now :=time.Now()
-    {{.First}}.ProjId = *utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.ProjId)
-    {{.First}}.CreatedBy = utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.CreatedBy)
-    {{.First}}.UpdatedBy = utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.UpdatedBy)
-    {{.First}}.CreatedAt = now
-    {{.First}}.UpdatedAt = now
-    if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).Create({{.First}}).Error; err != nil {
-        logger.Error("新增{{.TableComment}}错误:", err)
-        return err
-    }
-    return
-}
-
-//修改{{.TableComment}}
-func ({{.First}} *{{.BigHumpTableName}}) Modify(req *{{.ModelName}}.{{.UpdateFunc.RequestName}}) (err error) {
-    //TODO 唯一性校验
-    //var cnt int
-    //if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).Where("proj_id = ? and id != ? and name = ?", req.{{.BigHumpTableName}}Info.ProjId.Value, req.Id, req.{{.BigHumpTableName}}Info.Name.Value).
-    //    Count(&cnt).Error; err != nil {
-    //    return err
-    //}
-    //if cnt > 0 {
-    //    return global.ErrAlreadyExist
-    //}
-
-    {{.First}} = {{.First}}.From{{.BigHumpTableName}}(req.{{.BigHumpTableName}}Info)
-
-
-    now :=time.Now()
-    {{.First}}.ID = uint(req.Id)
-    {{.First}}.ProjId = *utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.ProjId)
-    {{.First}}.UpdatedBy = utils.GetFromInt64Value(req.{{.BigHumpTableName}}Info.UpdatedBy)
-    {{.First}}.UpdatedAt = now
-
-    if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).
-        Where("id = ?", req.Id).Updates({{.First}}).Error; err != nil {
-        logger.Error("修改{{.TableComment}}错误:", err)
-        return err
-    }
-    return
-}
-
-//删除{{.TableComment}}
-func ({{.First}} *{{.BigHumpTableName}}) Remove(req *{{.ModelName}}.{{.DeleteFunc.RequestName}}) (err error) {
-    now := time.Now()
-    {{.First}} = &{{.BigHumpTableName}}{}
-    {{.First}}.DeletedAt = &now
-    {{.First}}.DeletedBy = &req.DeletedBy
-    if err = global.{{.ConnectDb}}.Table({{.First}}.tableName()).
-        Where("id = ?", req.Id).Update({{.First}}).Error; err != nil {
-        return err
-    }
-    return
-}
-
-//根据id查询
-func ({{.First}} *{{.BigHumpTableName}}) QueryByID(q *{{.ModelName}}.QueryByID, cb QueryFunc) error {
-    db := global.{{.ConnectDb}}.Table({{.First}}.tableName())
-    db = db.Where("id = ?", q.GetId())
-
-    return query(db, cb, []{{.BigHumpTableName}}{}, 0, 1)
-}
-
-//查询{{.TableComment}}列表
-func ({{.First}} *{{.BigHumpTableName}}) QueryAll(q *{{.ModelName}}.Query{{.BigHumpTableName}}All, cb QueryFunc, projId int64) error {
-    tx := global.{{.ConnectDb}}.Begin()
-    defer tx.Commit()
-
-    db := tx.Table({{.First}}.tableName())
-    db = db.Where("proj_id = ?", projId)
-
-    //TODO 查询条件添加修改
-    {{range .ColList }}{{if eq .Ignore false}}//if q.{{.BigHumpColName}} != nil {
-    //    db = db.Where("{{.ColName}} like ?", genValLikePattern(q.{{.BigHumpColName}}.Value)) //{{.ColType}}
-    //}{{end}}
+{* func ({{.First}} *{{.BigHumpTableName}}) getByCon(db *gorm.DB) (recs []*{{.BigHumpTableName}}, err error) {
+	tx := db.Model({{.BigHumpTableName}}{})
+	if {{.First}}.ID != 0 {
+		tx = tx.Where("id=?", {{.First}}.ID)
+	}
+    {{range .ColList }}
+        {{if eq .Base false}}
+        if {{.First}}.{{.BigHumpColName}} !={{ if eq .ColTypeNameGo int32  }}0{{ else if eq .ColTypeNameGo int64}} 0{{ else if eq .ColTypeNameGo string }} ""{{ end }}  {
+            tx = tx.Where("{{.ColName}}=?", {{.First}}.{{.BigHumpColName}})
+        }
+        {{end}}
     {{ end }}
 
-    if len(q.GetOrderField()) > 0 {
-        if utils.HasField({{.First}}, q.GetOrderField()) {
-        if q.GetAscend() {
-            db = db.Order(fmt.Sprintf("%s asc", gorm.ToColumnName(q.GetOrderField())))
-        } else {
-            db = db.Order(fmt.Sprintf("%s desc", gorm.ToColumnName(q.GetOrderField())))
-        }
-        } else {
-            logger.Warnf("非法排序字段：%s", q.GetOrderField())
-        }
-    } else {
-        db = db.Order("created_at desc")
+	if err = tx.Find(&recs).Error; err != nil {
+		return
+	}
+    return
+} *}
+
+
+{*
+func ({{.First}} *{{.BigHumpTableName}}) new(db *gorm.DB) error {
+    if err := global.{{.ConnectDb}}.Model({{.BigHumpTableName}}{}).Create({{.First}}).Error; err != nil {
+		return err
+	}
+    return nil
+}
+
+func ({{.First}} *{{.BigHumpTableName}}) update(db *gorm.DB) error {
+	if err := global.{{.ConnectDb}}.Model({{.BigHumpTableName}}{}).
+		Where("id=?", {{.First}}.ID).
+		Updates({{.First}}).Error; err != nil {
+		return err
+	}
+    return nil
+}
+
+func ({{.First}} *{{.BigHumpTableName}}) del(db *gorm.DB) error {
+	if err := global.{{.ConnectDb}}.Model({{.BigHumpTableName}}{}).
+		Where("id=?", {{.First}}.ID).
+		Delete(&{{.BigHumpTableName}}{}).Error; err != nil {
+		return err
+	}
+}
+
+func ({{.First}} *{{.BigHumpTableName}}) New() error {
+	err := global.{{.ConnectDb}}.Transaction(func(tx *gorm.DB) (err error) {
+		err = {{.First}}.new(tx)
+		return
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ({{.First}} *{{.BigHumpTableName}}) Update() error {
+	err := global.{{.BigHumpTableName}}.Transaction(func(tx *gorm.DB) (err error) {
+		//检查是否存在
+		con := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}
+		olds, err := con.getByCon(tx)
+		if err != nil {
+			return
+		}
+		if len(olds) == 0 {
+			return global.NewError(int32({{.ModelName}}.ErrCode_INVALID_PARAM), "记录不存在")
+		}
+
+
+		err = {{.First}}.update(tx)
+		return
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ({{.First}} *{{.BigHumpTableName}}) Remove() error {
+	err := global.{{.BigHumpTableName}}.Transaction(func(tx *gorm.DB) (err error) {
+		//检查是否存在
+		con := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}
+		olds, err := con.getByCon(tx)
+		if err != nil {
+			return
+		}
+		if len(olds) == 0 {
+			return global.NewError(int32({{.ModelName}}.ErrCode_INVALID_PARAM), "记录不存在")
+		}
+
+
+		err = {{.First}}.del(tx)
+		return
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ({{.First}} *{{.BigHumpTableName}})QueryByID(query *{{.ModelName}}.QueryByID) (
+    recs []*{{.BigHumpTableName}}, err error) {
+	db := global.{{.ConnectDb}}
+
+    //检查是否存在
+    con := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}
+    olds, err := con.getByCon(tx)
+    if err != nil {
+        return
+    }
+    if len(olds) == 0 {
+        return global.NewError(int32({{.ModelName}}.ErrCode_INVALID_PARAM), "记录不存在")
     }
 
-    return query(db, cb, []{{.BigHumpTableName}}{}, q.GetOffset(), q.GetCount())
+	recs = append(recs, olds[0])
+	return
 }
+ *}
+
+{* func ({{.First}} *{{.BigHumpTableName}})QueryByCon(query *{{.ModelName}}.Query{{.BigHumpTableName}}RequestQueryByCon,queryparam *{{.ModelName}}.QueryCommonParam) (
+    total int64,recs []*{{.BigHumpTableName}}, err error) {
+	db := global.{{.ConnectDb}}
+	tx := global.{{.ConnectDb}}.Model({{.BigHumpTableName}}{})
+	{{.First}} = {{.First}}.From{{.BigHumpTableName}}(query.GetInfo())
+
+     {{range .ColList }}
+        {{if eq .Base false}}
+        if {{.First}}.{{.BigHumpColName}} !={{ if eq .ColTypeNameGo int32  }}0{{ else if eq .ColTypeNameGo int64}} 0{{ else if eq .ColTypeNameGo string }} ""{{ end }}  {
+            tx = tx.Where("{{.ColName}}=?", {{.First}}.{{.BigHumpColName}})
+        }
+        {{end}}
+    {{ end }} 
+
+
+
+	if err = tx.Count(&total).Error; err != nil {
+		return
+	}
+
+	if HasField({{.BigHumpTableName}}{}, queryparam.GetSort().GetField()) {
+		if queryparam.GetSort().GetAsc() == int32(ASC) {
+			tx = tx.Order(genColumnName(queryparam.GetSort().Field) + " asc")
+		} else {
+			tx = tx.Order(genColumnName(queryparam.GetSort().Field) + " desc")
+		}
+	} else {
+		logger.Infof("忽略无效的排序字段(%s)", queryparam.GetSort().GetField())
+	}
+
+	if err = tx.Offset(int(queryparam.GetOffset())).
+		Limit(int(queryparam.GetCount())).
+		Find(&recs).Error; err != nil {
+		return
+	}
+
+	return
+}
+ *}
