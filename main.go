@@ -3,6 +3,7 @@ package main
 import (
 	"generate-proto/global"
 	"generate-proto/model"
+
 	"github.com/labstack/gommon/log"
 )
 

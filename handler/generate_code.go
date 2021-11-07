@@ -5,8 +5,6 @@ import (
 	"generate-proto/global"
 	"generate-proto/middle"
 	"generate-proto/model"
-	"github.com/gin-gonic/gin"
-	"github.com/labstack/gommon/log"
 	"html/template"
 	"io"
 	"net/http"
@@ -14,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/gin-gonic/gin"
+	"github.com/labstack/gommon/log"
 )
 
 type tableSelected struct {
@@ -107,14 +108,12 @@ func GenerateCode(c *gin.Context) {
 		modelTpl, _ = template.ParseFiles(modelFilePath)
 		serviceHandlerTpl, _ = template.ParseFiles(serviceHandlerFilePath)
 		webHandlerTpl, _ = template.ParseFiles(webHandlerFilePath)
-		break
 	case "goproto":
 		typeMap = global.GoType
 		protoTpl, _ = template.ParseFiles(goProtoFilePath)
 		modelTpl, _ = template.ParseFiles(goModelFilePath)
 		serviceHandlerTpl, _ = template.ParseFiles(goServiceHandlerFilePath)
 		webHandlerTpl, _ = template.ParseFiles(goWebHandlerFilePath)
-		break
 	case "gogoproto": // 考虑实现
 		//typeMap = global.GoGoType
 		//protoTpl,_ = template.ParseFiles(gogoProtoFilePath)
@@ -280,6 +279,10 @@ func GenerateCode(c *gin.Context) {
 // fileName写入文件  tmpl模板文件 body模版参数
 func generate(fileName string, tmpl *template.Template, body interface{}) {
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, 0755)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	err = tmpl.Execute(file, body)
 	if err != nil {
 		log.Error(os.Stderr, "Fatal error: ", err)
