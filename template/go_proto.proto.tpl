@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = ".;{{.ModelName}}";
+option go_package = "proto/{{.ModelName}}";
 package go.micro.service.{{.ModelName}};
 import "google/protobuf/wrappers.proto";
 
@@ -38,19 +38,40 @@ message QueryByID {
   int64 id = 1;
 }
 
+// 排序
+message Sorter {
+  string field = 1;
+  int32 asc = 2; //1-正序，0-倒叙
+}
+
+//查询参数
+message QueryCommonParam{
+    int32 offset =3;
+    int32 count =4;
+    Sorter sort=5;
+}
+
+//操作员信息
+message Operator {
+    int64 user_id=1;
+    string user_name=2;
+    int32 user_type=3;
+}
+
 
 
 {{range .ServiceList}}
-// {{.ServiceComment}}
+// {{.ServiceComment}}服务
 service {{.ServiceName}} {
 {{range .FuncList }}    rpc {{.FuncName}}({{.RequestName}}) returns ({{.ResponseName}}) {}
 {{ end }}
 }
 {{ end }}
 
+
 {{range .MsgList }}
 message {{ .MsgName }} {
-{{range .FieldList }}    {{if eq .Ignore false}}google.protobuf.{{end}}{{.ColTypeName}} {{.ColName}}{{if eq .Base false}}={{.ColNum}};{{end}}//{{.ColComment}}
+{{range .FieldList }} {{.ColTypeNameGo}} {{.ColName}}{{if eq .Base false}}={{.ColNum}};{{end}}//{{.ColComment}}
 {{ end }}
 }
 {{ end }}

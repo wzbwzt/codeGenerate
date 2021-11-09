@@ -109,11 +109,15 @@ func GenerateCode(c *gin.Context) {
 		serviceHandlerTpl, _ = template.ParseFiles(serviceHandlerFilePath)
 		webHandlerTpl, _ = template.ParseFiles(webHandlerFilePath)
 	case "goproto":
+		var err1 error
 		typeMap = global.GoType
-		protoTpl, _ = template.ParseFiles(goProtoFilePath)
-		modelTpl, _ = template.ParseFiles(goModelFilePath)
-		serviceHandlerTpl, _ = template.ParseFiles(goServiceHandlerFilePath)
-		webHandlerTpl, _ = template.ParseFiles(goWebHandlerFilePath)
+		protoTpl, err1 = template.ParseFiles(goProtoFilePath)
+		modelTpl, err1 = template.ParseFiles(goModelFilePath)
+		serviceHandlerTpl, err1 = template.ParseFiles(goServiceHandlerFilePath)
+		if err1 != nil {
+			log.Error(err1)
+		}
+		webHandlerTpl, err1 = template.ParseFiles(goWebHandlerFilePath)
 	case "gogoproto": // 考虑实现
 		//typeMap = global.GoGoType
 		//protoTpl,_ = template.ParseFiles(gogoProtoFilePath)
@@ -283,6 +287,10 @@ func generate(fileName string, tmpl *template.Template, body interface{}) {
 		log.Error(err)
 		return
 	}
+	if tmpl == nil {
+		log.Error("模板不可以为nil")
+		return
+	}
 	err = tmpl.Execute(file, body)
 	if err != nil {
 		log.Error(os.Stderr, "Fatal error: ", err)
@@ -358,66 +366,83 @@ func zipDir(srcPath, zipName string) {
 // 生成proto message
 func createMsg(fieldList []global.Field, table global.Table, preFix string) (msgList []global.Message) {
 
-	ignorePreFixName := middle.IgnorePrefix(preFix, table.TableName)
+	// ignorePreFixName := middle.IgnorePrefix(preFix, table.TableName)
 
 	idField := global.Field{
-		ColNum:      1,
-		ColName:     "id",
-		ColTypeName: "int64",
-		ColComment:  "pk",
-		Ignore:      true,
+		ColNum:        1,
+		ColName:       "id",
+		ColTypeName:   "int64",
+		ColTypeNameGo: "int64",
+		ColComment:    "pk",
+		Ignore:        true,
 	}
 	idField2 := global.Field{
-		ColNum:      2,
-		ColName:     "id",
-		ColTypeName: "int64",
-		ColComment:  "pk",
-		Ignore:      true,
+		ColNum:        2,
+		ColName:       "id",
+		ColTypeName:   "int64",
+		ColTypeNameGo: "int64",
+		ColComment:    "pk",
+		Ignore:        true,
+	}
+	operatorField2 := global.Field{
+		ColNum:        2,
+		ColName:       "operator",
+		ColTypeName:   "Operator",
+		ColTypeNameGo: "Operator",
+		ColComment:    "操作人员信息",
+		Ignore:        true,
 	}
 	returnField := global.Field{
-		ColNum:      1,
-		ColName:     "ret",
-		ColTypeName: "CommonReturn",
-		ColComment:  "回复",
-		Ignore:      true,
+		ColNum:        1,
+		ColName:       "ret",
+		ColTypeName:   "CommonReturn",
+		ColTypeNameGo: "CommonReturn",
+		ColComment:    "回复",
+		Ignore:        true,
 	}
 	infoField := global.Field{
-		ColNum:      1,
-		ColName:     ignorePreFixName + "_info",
-		ColTypeName: table.BigHumpTableName + "Info",
-		ColComment:  table.TableComment + "详情",
-		Ignore:      true,
+		ColNum:        1,
+		ColName:       "info",
+		ColTypeName:   table.BigHumpTableName,
+		ColTypeNameGo: table.BigHumpTableName,
+		ColComment:    table.TableComment + "详情",
+		Ignore:        true,
 	}
 	queryField := global.Field{
-		ColNum:      1,
-		ColName:     "query {QueryByID by_id = 2;Query" + table.BigHumpTableName + "All all = 3;}",
-		ColTypeName: "oneof",
-		Base:        true, //复用
-		ColComment:  "回复",
-		Ignore:      true,
+		ColNum:        1,
+		ColName:       "query {QueryByID by_id = 2;Query" + table.BigHumpTableName + "All all = 3;}",
+		ColTypeName:   "oneof",
+		ColTypeNameGo: "oneof",
+		Base:          true, //复用
+		ColComment:    "回复",
+		Ignore:        true,
 	}
 	repeatedInfoField := global.Field{
-		ColNum:      2,
-		ColName:     ignorePreFixName,
-		ColTypeName: "repeated " + table.BigHumpTableName,
-		ColComment:  table.TableComment,
-		Ignore:      true,
+		ColNum:        2,
+		ColName:       "list",
+		ColTypeName:   "repeated " + table.BigHumpTableName,
+		ColTypeNameGo: "repeated " + table.BigHumpTableName,
+		ColComment:    table.TableComment,
+		Ignore:        true,
 	}
 	totalField := global.Field{
-		ColNum:      3,
-		ColName:     "total",
-		ColTypeName: "int32",
-		ColComment:  "数量",
-		Ignore:      true,
+		ColNum:        3,
+		ColName:       "total",
+		ColTypeName:   "int32",
+		ColTypeNameGo: "int32",
+		ColComment:    "数量",
+		Ignore:        true,
 	}
 
 	returnFieldList := []global.Field{returnField}
 
 	infoFieldList := []global.Field{}
 	queryAllList := []global.Field{}
-	tableFieldList := []global.Field{infoField, idField2}
+	// tableFieldList := []global.Field{infoField, idField2}
 
-	i := 1
+	infoFieldList = append(infoFieldList, idField, operatorField2)
+
+	i := 3
 	for _, field := range fieldList {
 		_, ignoreOk := global.IgnoreCol[field.ColName]
 
@@ -441,49 +466,64 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 	}
 
 	// 减少循环与临时变量 分页查询条件放后面
-	offsetField := global.Field{
-		ColNum:      i,
-		ColName:     "offset",
-		ColTypeName: "int32",
-		ColComment:  "页码",
-		Ignore:      true,
+	// offsetField := global.Field{
+	// 	ColNum:      i,
+	// 	ColName:     "offset",
+	// 	ColTypeName: "int32",
+	// 	ColComment:  "页码",
+	// 	Ignore:      true,
+	// }
+	// countField := global.Field{
+	// 	ColNum:      i + 1,
+	// 	ColName:     "count",
+	// 	ColTypeName: "int32",
+	// 	ColComment:  "每页数量",
+	// 	Ignore:      true,
+	// }
+	// orderField := global.Field{
+	// 	ColNum:      i + 2,
+	// 	ColName:     "order_field",
+	// 	ColTypeName: "string",
+	// 	ColComment:  "排序字段",
+	// 	Ignore:      true,
+	// }
+	// ascField := global.Field{
+	// 	ColNum:      i + 3,
+	// 	ColName:     "ascend",
+	// 	ColTypeName: "bool",
+	// 	ColComment:  "排序方式",
+	// 	Ignore:      true,
+	// }
+
+	queryCommonParam := global.Field{
+		ColNum:        i,
+		ColName:       "query_param",
+		ColTypeName:   "QueryCommonParam",
+		ColTypeNameGo: "QueryCommonParam",
+		ColComment:    "分页信息",
+		Ignore:        true,
 	}
-	countField := global.Field{
-		ColNum:      i + 1,
-		ColName:     "count",
-		ColTypeName: "int32",
-		ColComment:  "每页数量",
-		Ignore:      true,
-	}
-	orderField := global.Field{
-		ColNum:      i + 2,
-		ColName:     "order_field",
-		ColTypeName: "string",
-		ColComment:  "排序字段",
-		Ignore:      true,
-	}
-	ascField := global.Field{
-		ColNum:      i + 3,
-		ColName:     "ascend",
-		ColTypeName: "bool",
-		ColComment:  "排序方式",
-		Ignore:      true,
-	}
-	queryAllList = append(queryAllList, offsetField)
-	queryAllList = append(queryAllList, countField)
-	queryAllList = append(queryAllList, orderField)
-	queryAllList = append(queryAllList, ascField)
+	// queryAllList = append(queryAllList, offsetField)
+	// queryAllList = append(queryAllList, countField)
+	// queryAllList = append(queryAllList, orderField)
+	// queryAllList = append(queryAllList, ascField)
+	queryAllList = append(queryAllList, queryCommonParam)
 
 	//表结构详情
 	tableInfoMsg := global.Message{
-		MsgName:   table.BigHumpTableName + "Info",
+		MsgName:   table.BigHumpTableName,
 		FieldList: infoFieldList,
 	}
-	//表结构详情 包含ID
-	tableMsg := global.Message{
-		MsgName:   table.BigHumpTableName,
-		FieldList: tableFieldList,
-	}
+	// //表结构详情
+	// tableInfoMsg := global.Message{
+	// 	MsgName:   table.BigHumpTableName + "Info",
+	// 	FieldList: infoFieldList,
+	// }
+	// //表结构详情 包含ID
+	// tableMsg := global.Message{
+	// 	MsgName:   table.BigHumpTableName,
+	// 	FieldList: tableFieldList,
+	// }
 
 	//新增
 	createReqList := []global.Field{infoField}
@@ -514,9 +554,10 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 	}
 
 	//修改
+	updateReqList := []global.Field{infoField}
 	uRep := global.Message{
 		MsgName:   table.UpdateFunc.RequestName,
-		FieldList: tableFieldList,
+		FieldList: updateReqList,
 	}
 	uResp := global.Message{
 		MsgName:   table.UpdateFunc.ResponseName,
@@ -524,14 +565,14 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 	}
 
 	//删除
-	deleteField := global.Field{
-		ColNum:      2,
-		ColName:     "deleted_by",
-		ColTypeName: "int64",
-		ColComment:  "删除人",
-		Ignore:      true,
-	}
-	deleteList := []global.Field{idField, deleteField}
+	// deleteField := global.Field{
+	// 	ColNum:      2,
+	// 	ColName:     "deleted_by",
+	// 	ColTypeName: "int64",
+	// 	ColComment:  "删除人",
+	// 	Ignore:      true,
+	// }
+	deleteList := []global.Field{idField}
 	dRep := global.Message{
 		MsgName:   table.DeleteFunc.RequestName,
 		FieldList: deleteList,
@@ -542,16 +583,16 @@ func createMsg(fieldList []global.Field, table global.Table, preFix string) (msg
 	}
 
 	msgList = append(msgList, tableInfoMsg) //表结构
-	msgList = append(msgList, tableMsg)     //表结构包含ID
-	msgList = append(msgList, cRep)         //新增请求
-	msgList = append(msgList, cResp)        //新增结果
-	msgList = append(msgList, queryAllMsg)  //读取请求全部参数
-	msgList = append(msgList, rRep)         //读取请求
-	msgList = append(msgList, rResp)        //读取结果
-	msgList = append(msgList, uRep)         //修改请求
-	msgList = append(msgList, uResp)        //修改结果
-	msgList = append(msgList, dRep)         //删除请求
-	msgList = append(msgList, dResp)        //删除结果
+	// msgList = append(msgList, tableMsg)     //表结构包含ID
+	msgList = append(msgList, cRep)        //新增请求
+	msgList = append(msgList, cResp)       //新增结果
+	msgList = append(msgList, queryAllMsg) //读取请求全部参数
+	msgList = append(msgList, rRep)        //读取请求
+	msgList = append(msgList, rResp)       //读取结果
+	msgList = append(msgList, uRep)        //修改请求
+	msgList = append(msgList, uResp)       //修改结果
+	msgList = append(msgList, dRep)        //删除请求
+	msgList = append(msgList, dResp)       //删除结果
 
 	return
 }

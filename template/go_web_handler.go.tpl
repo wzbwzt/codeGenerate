@@ -21,7 +21,9 @@ import (
 
 //{{.TableComment}}详情
 type {{.BigHumpTableName}}Info struct {
-    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   *{{.ColTypeNameGo}} `json:"{{.LittleHumpColName}}"`   //{{.ColComment}}{{end}}
+    Id            int64  `json:"id"`
+    ProjId  int64 `json:"项目id" sortKey:"ProjID"`  //项目id"
+    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.ColComment}}"`   //{{.ColComment}}{{end}}
     {{ end }}
 }
 
@@ -30,32 +32,35 @@ type Add{{.BigHumpTableName}}Param struct {
 }
 
 type {{.UpdateFunc.FuncName}}Param struct {
-    Id     int64 `json:"id"`
     {{.BigHumpTableName}}Info
 }
 
 type {{.BigHumpTableName}}ResultInfo struct {
-    Id int64 `json:"id"`
-    {{.BigHumpTableName}}Info
+    Id            int64  `json:"id"`
+    ProjId  int64 `json:"项目id" sortKey:"ProjID"`  //项目id"
+    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.ColComment}}" sortKey:"{{.BigHumpColName}}"`   //{{.ColComment}}{{end}}
+    {{ end }}
 }
 
 type {{.BigHumpTableName}}ListParam struct {
-    proj.CommonSearchParam
-    {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}  *{{.ColTypeNameGo}} `json:"{{.LittleHumpColName}}"`  //{{.ColComment}}{{end}}
+    Paging       proj.SearchParamPaging  `json:"pagination"`
+    Sorter       proj.SearchParamSorting `json:"sorter"`
+    ProjId  int64 `json:"项目id"`  //项目id"
+    {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}  {{.ColTypeNameGo}} `json:"{{.ColComment}}" `  //{{.ColComment}}{{end}}
     {{ end }}
 }
 
 type {{.BigHumpTableName}}ListResult struct {
     Total int                    `json:"total"`
-    List  []{{.BigHumpTableName}}ResultInfo `json:"list"`
+    List  []*{{.BigHumpTableName}}ResultInfo `json:"list"`
 }
 
 //请求参数转protobuf model
-func ({{.First}} {{.BigHumpTableName}}Info) ToProtobufModel() (result *{{.ModelName}}.{{.BigHumpTableName}}Info) {
-
-    result = &{{.ModelName}}.{{.BigHumpTableName}}Info{
-        ProjId:  utils.CreateInt64ValuePtr({{$First}}.ProjId),
-        {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}:  utils.Create{{.ColTypeName}}Ptr({{$First}}.{{.BigHumpColName}}),{{end}}
+func ({{.First}} {{.BigHumpTableName}}Info) ToProtobufModel() (result *{{.ModelName}}.{{.BigHumpTableName}}) {
+    result = &{{.ModelName}}.{{.BigHumpTableName}}{
+        ProjId:  {{$First}}.ProjId,
+        Id:{{$First}}.Id,
+        {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}:  {{$First}}.{{.BigHumpColName}},{{end}}
         {{ end }}
     }
     return
@@ -64,18 +69,17 @@ func ({{.First}} {{.BigHumpTableName}}Info) ToProtobufModel() (result *{{.ModelN
 //protobuf model 转返回参数
 func To{{.BigHumpTableName}}ResultInfo({{.First}} *{{.ModelName}}.{{.BigHumpTableName}}) (result {{.BigHumpTableName}}ResultInfo) {
     result = {{.BigHumpTableName}}ResultInfo{
-        Id: {{.First}}.Id,
-        {{.BigHumpTableName}}Info: {{.BigHumpTableName}}Info{
-            {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}:  utils.GetFrom{{.ColTypeName}}({{$First}}.{{$BigHumpTableName}}Info.{{.BigHumpColName}}),{{end}}
+            Id: {{.First}}.Id,
+            ProjId:{{.First}}.ProjId,
+            {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}:  {{$First}}.{{.BigHumpColName}},{{end}}
             {{ end }}
-        },
     }
     return
 }
 
 //TODO 请求参数检测
 func ({{.First}} {{.BigHumpTableName}}Info) Check() error {
-    {{range .ColList }}{{if eq .Base false}}    //if {{$First}}.{{.BigHumpColName}} == nil || len(*{{$First}}.{{.BigHumpColName}}) == 0 {
+    {{range .ColList }}{{if eq .Base false}}    //if  len({{$First}}.{{.BigHumpColName}}) == 0 {
     //    return fmt.Errorf("{{.ColComment}}不能为空!")
     //}{{end}}
     {{ end }}
@@ -86,11 +90,11 @@ func ({{.First}} {{.BigHumpTableName}}Info) Check() error {
 
 //-------------------------handler分界线--------------------------
 // handler init 复制文件
-//secureGroup.POST("/自定义/{{.LittleHumpTableName}}/add", {{.ModelName}}.Add{{.BigHumpTableName}}Handler)
-//secureGroup.POST("/自定义/{{.LittleHumpTableName}}/update", {{.ModelName}}.Update{{.BigHumpTableName}}Handler)
-//secureGroup.POST("/自定义/{{.LittleHumpTableName}}/del", {{.ModelName}}.Delete{{.BigHumpTableName}}Handler)
-//secureGroup.POST("/自定义/{{.LittleHumpTableName}}/list", {{.ModelName}}.Query{{.BigHumpTableName}}ListHandler)
-//secureGroup.POST("/自定义/{{.LittleHumpTableName}}/info", {{.ModelName}}.Query{{.BigHumpTableName}}InfoHandler)
+//secureGroup.POST("/{{.ModelName}}/{{.LittleHumpTableName}}/add", {{.ModelName}}.Add{{.BigHumpTableName}}Handler)
+//secureGroup.POST("/{{.ModelName}}/{{.LittleHumpTableName}}/update", {{.ModelName}}.Update{{.BigHumpTableName}}Handler)
+//secureGroup.POST("/{{.ModelName}}/{{.LittleHumpTableName}}/delete", {{.ModelName}}.Delete{{.BigHumpTableName}}Handler)
+//secureGroup.POST("/{{.ModelName}}/{{.LittleHumpTableName}}/list", {{.ModelName}}.Query{{.BigHumpTableName}}ListHandler)
+//secureGroup.POST("/{{.ModelName}}/{{.LittleHumpTableName}}/info", {{.ModelName}}.Query{{.BigHumpTableName}}InfoHandler)
 
 
 //新增{{.TableComment}}
@@ -108,23 +112,35 @@ func Add{{.BigHumpTableName}}Handler(c *gin.Context) {
     }
 
     if err = param.{{.BigHumpTableName}}Info.Check(); err != nil {
-        resp.Code = global.ErrCodeInternal
+        resp.Code = global.ErrCodeParamInvalid
         resp.Msg = err.Error()
         return
     }
 
-    user := sys.User{}
     session := c.MustGet(global.ContextKeyForSession).(*sys.Session)
-    _ = json.Unmarshal(session.Data, &user)
+	sessionData, err := sys.GetSessionData(session)
+	if err != nil {
+		resp.Code = global.ErrCodeSessionIllegal
+		resp.Msg = "会话无效"
+		return
+	}
+	var userid int64
+	var username string
+	var usertype int32
+	switch sessionData.(type) {
+	case *sys.User:
+		userid = sessionData.(*sys.User).ID
+		username = sessionData.(*sys.User).UserName
+		usertype = sessionData.(*sys.User).UserType
+	}
 
+  
     {{.LittleHumpTableName}}Info := param.{{.BigHumpTableName}}Info.ToProtobufModel()
-    {{.LittleHumpTableName}}Info.CreatedBy=utils.CreateInt64Value(user.ID)
-    {{.LittleHumpTableName}}Info.UpdatedBy=utils.CreateInt64Value(user.ID)
     req := &{{.ModelName}}.{{.CreateFunc.RequestName}}{
-        {{.BigHumpTableName}}Info: {{.LittleHumpTableName}}Info,
+       Info: {{.LittleHumpTableName}}Info,
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
     rsp, err := proto.{{.ServiceName}}.{{.CreateFunc.FuncName}}(ctx, req)
     if err != nil {
@@ -134,7 +150,7 @@ func Add{{.BigHumpTableName}}Handler(c *gin.Context) {
         return
     }
     ret := rsp.Ret
-    if ret != nil && ret.Code != 0 {
+    if ret != nil && ret.Code != {{.ModelName}}.ErrCode_OK {
         logger.Error(ret.Reason)
         resp.Code = global.ErrCodeInternal
         resp.Msg = ret.Reason
@@ -160,23 +176,34 @@ func {{.UpdateFunc.FuncName}}Handler(c *gin.Context) {
     }
 
     if err = param.{{.BigHumpTableName}}Info.Check(); err != nil {
-        resp.Code = global.ErrCodeInternal
+        resp.Code = global.ErrCodeParamInvalid
         resp.Msg = err.Error()
         return
     }
 
-    user := sys.User{}
-    session := c.MustGet(global.ContextKeyForSession).(*sys.Session)
-    _ = json.Unmarshal(session.Data, &user)
+    //session := c.MustGet(global.ContextKeyForSession).(*sys.Session)
+	//sessionData, err := sys.GetSessionData(session)
+	//if err != nil {
+		//resp.Code = global.ErrCodeSessionIllegal
+		//resp.Msg = "会话无效"
+		//return
+	//}
+	//var userid int64
+	//var username string
+	//var usertype int32
+	//switch sessionData.(type) {
+	//case *sys.User:
+		//userid = sessionData.(*sys.User).ID
+		//username = sessionData.(*sys.User).UserName
+		//usertype = sessionData.(*sys.User).UserType
+	//}
 
     {{.LittleHumpTableName}}Info := param.{{.BigHumpTableName}}Info.ToProtobufModel()
-    {{.LittleHumpTableName}}Info.UpdatedBy=utils.CreateInt64Value(user.ID)
     req := &{{.ModelName}}.{{.UpdateFunc.RequestName}}{
-        Id:             param.Id,
-        {{.BigHumpTableName}}Info: {{.LittleHumpTableName}}Info,
+        Info: {{.LittleHumpTableName}}Info,
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
     rsp, err := proto.{{.ServiceName}}.{{.UpdateFunc.FuncName}}(ctx, req)
     if err != nil {
@@ -186,7 +213,7 @@ func {{.UpdateFunc.FuncName}}Handler(c *gin.Context) {
         return
     }
     ret := rsp.Ret
-    if ret != nil && ret.Code != 0 {
+    if ret != nil && ret.Code != {{.ModelName}}.ErrCode_OK {
         logger.Error(ret.Reason)
         resp.Code = global.ErrCodeInternal
         resp.Msg = ret.Reason
@@ -214,16 +241,28 @@ func {{.DeleteFunc.FuncName}}Handler(c *gin.Context) {
         return
     }
 
-    user := sys.User{}
-    session := c.MustGet(global.ContextKeyForSession).(*sys.Session)
-    _ = json.Unmarshal(session.Data, &user)
+  //session := c.MustGet(global.ContextKeyForSession).(*sys.Session)
+	//sessionData, err := sys.GetSessionData(session)
+	//if err != nil {
+		//resp.Code = global.ErrCodeSessionIllegal
+		//resp.Msg = "会话无效"
+		//return
+	//}
+	//var userid int64
+	//var username string
+	//var usertype int32
+	//switch sessionData.(type) {
+	//case *sys.User:
+		//userid = sessionData.(*sys.User).ID
+		//username = sessionData.(*sys.User).UserName
+		//usertype = sessionData.(*sys.User).UserType
+	//}
 
     req := &{{.ModelName}}.{{.DeleteFunc.RequestName}}{
         Id: param.Id,
-        DeletedBy: user.ID,
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
     rsp, err := proto.{{.ServiceName}}.{{.DeleteFunc.FuncName}}(ctx, req)
     if err != nil {
@@ -234,7 +273,7 @@ func {{.DeleteFunc.FuncName}}Handler(c *gin.Context) {
     }
 
     ret := rsp.Ret
-    if ret != nil && ret.Code != 0 {
+    if ret != nil && ret.Code != {{.ModelName}}.ErrCode_OK {
         logger.Error(ret.Reason)
         resp.Code = global.ErrCodeInternal
         resp.Msg = ret.Reason
@@ -271,7 +310,7 @@ func Query{{.BigHumpTableName}}InfoHandler(c *gin.Context) {
         },
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
     rsp, err := proto.{{.ServiceName}}.{{.ReadFunc.FuncName}}(ctx, req)
     if err != nil {
@@ -282,14 +321,14 @@ func Query{{.BigHumpTableName}}InfoHandler(c *gin.Context) {
     }
 
     ret := rsp.Ret
-    if ret != nil && ret.Code != 0 {
+    if ret != nil && ret.Code != {{.ModelName}}.ErrCode_OK {
         logger.Error(ret.Reason)
         resp.Code = global.ErrCodeInternal
         resp.Msg = ret.Reason
         return
     }
 
-    {{.LittleHumpTableName}}s := rsp.{{.BigHumpTableName}}
+    {{.LittleHumpTableName}}s := rsp.List
     if len({{.LittleHumpTableName}}s) > 0 {
         {{.LittleHumpTableName}}Info := To{{.BigHumpTableName}}ResultInfo({{.LittleHumpTableName}}s[0])
         resp.Data = {{.LittleHumpTableName}}Info
@@ -313,27 +352,26 @@ func Query{{.BigHumpTableName}}ListHandler(c *gin.Context) {
         resp.Msg = "参数无效"
         return
     }
-
+	offset, count := proj.GetPagingOffsetAndCount(param.Paging, proj.MaxPageSize)
     req := &{{.ModelName}}.{{.ReadFunc.RequestName}}{
         Query: &{{.ModelName}}.{{.ReadFunc.RequestName}}_All{
             All: &{{.ModelName}}.Query{{.BigHumpTableName}}All{
-                ProjId: utils.CreateInt64Value(param.ProjID),
-                Offset: func() int32 {
-                    if param.Paging.Current == 0 {
-                        param.Paging.Current = 1
-                    }
-                return int32(param.Paging.Current-1) * int32(param.Paging.PageSize)
-                }(),
-                Count:      int32(param.Paging.PageSize),
-                OrderField: param.Sorter.Field,
-                Ascend:     param.Sorter.Order == proj.SearchOrderDesc,
-                {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}:  utils.Create{{.ColTypeName}}Ptr(param.{{.BigHumpColName}}),{{end}}
+                ProjId: param.ProjId,
+                QueryParam: &{{.ModelName}}.QueryCommonParam{
+                            Offset: int32(offset),
+                            Count:  int32(count),
+                            Sort: &{{.ModelName}}.Sorter{
+                                Field: utils.GetSortKeyByJsonTag({{.BigHumpTableName}}Info{}, param.Sorter.Field),
+                                Asc:   int32(param.Sorter.Order),
+                            },
+                        },
+                {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}: param.{{.BigHumpColName}},{{end}}
                 {{ end }}
             },
         },
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
     defer cancel()
     rsp, err := proto.{{.ServiceName}}.{{.ReadFunc.FuncName}}(ctx, req)
     if err != nil {
@@ -345,18 +383,18 @@ func Query{{.BigHumpTableName}}ListHandler(c *gin.Context) {
 
     ret := rsp.Ret
     total := rsp.Total
-    if ret != nil && ret.Code != 0 {
+    if ret != nil && ret.Code != {{.ModelName}}.ErrCode_OK {
         logger.Error(ret.Reason)
         resp.Code = global.ErrCodeInternal
         resp.Msg = ret.Reason
         return
     }
 
-    {{.LittleHumpTableName}}s := rsp.{{.BigHumpTableName}}
-    {{.LittleHumpTableName}}List := make([]{{.BigHumpTableName}}ResultInfo, 0)
+    {{.LittleHumpTableName}}s := rsp.List
+    var {{.LittleHumpTableName}}List  []*{{.BigHumpTableName}}ResultInfo
     for _, v := range {{.LittleHumpTableName}}s {
         {{.LittleHumpTableName}}Info := To{{.BigHumpTableName}}ResultInfo(v)
-        {{.LittleHumpTableName}}List = append({{.LittleHumpTableName}}List, {{.LittleHumpTableName}}Info)
+        {{.LittleHumpTableName}}List = append({{.LittleHumpTableName}}List, &{{.LittleHumpTableName}}Info)
     }
     resp.Data = {{.BigHumpTableName}}ListResult{
         Total: int(total),

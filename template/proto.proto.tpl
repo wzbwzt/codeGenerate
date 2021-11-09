@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = ".;{{.ModelName}}";
+option go_package = "proto/{{.ModelName}}";
 package go.micro.service.{{.ModelName}};
 
 //在当前文件位置执行 protoc --micro_out=. --go_out=. {{.ModelName}}.proto
