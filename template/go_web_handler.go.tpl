@@ -22,7 +22,7 @@ import (
 //{{.TableComment}}详情
 type {{.BigHumpTableName}}Info struct {
     Id            int64  `json:"id"`
-    ProjId  int64 `json:"项目id" sortKey:"ProjID"`  //项目id"
+    ProjId  int64 `json:"项目id"`  //项目id"
     {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.ColComment}}"`   //{{.ColComment}}{{end}}
     {{ end }}
 }
