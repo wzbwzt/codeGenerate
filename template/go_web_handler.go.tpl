@@ -362,7 +362,7 @@ func Query{{.BigHumpTableName}}ListHandler(c *gin.Context) {
                             Offset: int32(offset),
                             Count:  int32(count),
                             Sort: &{{.ModelName}}.Sorter{
-                                Field: utils.GetSortKeyByJsonTag({{.BigHumpTableName}}Info{}, param.Sorter.Field),
+                                Field: utils.GetSortKeyByJsonTag({{.BigHumpTableName}}ResultInfo{}, param.Sorter.Field),
                                 Asc:   int32(param.Sorter.Order),
                             },
                         },
