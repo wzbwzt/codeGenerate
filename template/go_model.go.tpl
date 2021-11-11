@@ -46,7 +46,7 @@ func ({{.First}} *{{.BigHumpTableName}}) To{{.BigHumpTableName}}() (result *{{.M
 }
 
 
-func ({{.First}} *{{.BigHumpTableName}}) getByCon(db *gorm.DB) (recs []*{{.BigHumpTableName}}, err error) {
+func ({{.First}} {{.BigHumpTableName}}) getByCon(db *gorm.DB) (recs []*{{.BigHumpTableName}}, err error) {
 	tx := db.Model({{.BigHumpTableName}}{})
 	if {{.First}}.ID != 0 {
 		tx = tx.Where("id=?", {{.First}}.ID)

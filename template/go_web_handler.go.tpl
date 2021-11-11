@@ -36,7 +36,7 @@ type {{.UpdateFunc.FuncName}}Param struct {
 }
 
 type {{.BigHumpTableName}}ResultInfo struct {
-    Id            int64  `json:"id"`
+    Id            int64  `json:"id" sortKey:"ID"`
     ProjId  int64 `json:"项目id" sortKey:"ProjID"`  //项目id"
     {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.ColComment}}" sortKey:"{{.BigHumpColName}}"`   //{{.ColComment}}{{end}}
     {{ end }}
@@ -131,7 +131,7 @@ func Add{{.BigHumpTableName}}Handler(c *gin.Context) {
 	case *sys.User:
 		userid = sessionData.(*sys.User).ID
 		username = sessionData.(*sys.User).UserName
-		usertype = sessionData.(*sys.User).UserType
+		usertype = int32(sys.SESSION_WEB)
 	}
 
   
@@ -192,10 +192,10 @@ func {{.UpdateFunc.FuncName}}Handler(c *gin.Context) {
 	//var username string
 	//var usertype int32
 	//switch sessionData.(type) {
-	//case *sys.User:
-		//userid = sessionData.(*sys.User).ID
-		//username = sessionData.(*sys.User).UserName
-		//usertype = sessionData.(*sys.User).UserType
+        //case *sys.User:
+        //	userid = sessionData.(*sys.User).ID
+        //	username = sessionData.(*sys.User).UserName
+		//usertype = int32(sys.SESSION_WEB)
 	//}
 
     {{.LittleHumpTableName}}Info := param.{{.BigHumpTableName}}Info.ToProtobufModel()
@@ -255,7 +255,8 @@ func {{.DeleteFunc.FuncName}}Handler(c *gin.Context) {
 	//case *sys.User:
 		//userid = sessionData.(*sys.User).ID
 		//username = sessionData.(*sys.User).UserName
-		//usertype = sessionData.(*sys.User).UserType
+		//usertype = int32(sys.SESSION_WEB)
+
 	//}
 
     req := &{{.ModelName}}.{{.DeleteFunc.RequestName}}{
