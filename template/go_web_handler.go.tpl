@@ -23,7 +23,7 @@ import (
 type {{.BigHumpTableName}}Info struct {
     Id            int64  `json:"id"`
     ProjId  int64 `json:"项目id"`  //项目id"
-    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.ColComment}}"`   //{{.ColComment}}{{end}}
+    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.LittleHumpColName}}"`   //{{.ColComment}}{{end}}
     {{ end }}
 }
 
@@ -38,7 +38,7 @@ type {{.UpdateFunc.FuncName}}Param struct {
 type {{.BigHumpTableName}}ResultInfo struct {
     Id            int64  `json:"id" sortKey:"ID"`
     ProjId  int64 `json:"项目id" sortKey:"ProjID"`  //项目id"
-    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.ColComment}}" sortKey:"{{.BigHumpColName}}"`   //{{.ColComment}}{{end}}
+    {{range .ColList }}{{if eq .Ignore false}} {{.BigHumpColName}}   {{.ColTypeNameGo}} `json:"{{.LittleHumpColName}}" sortKey:"{{.BigHumpColName}}"`   //{{.ColComment}}{{end}}
     {{ end }}
 }
 
@@ -46,7 +46,7 @@ type {{.BigHumpTableName}}ListParam struct {
     Paging       proj.SearchParamPaging  `json:"pagination"`
     Sorter       proj.SearchParamSorting `json:"sorter"`
     ProjId  int64 `json:"项目id"`  //项目id"
-    {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}  {{.ColTypeNameGo}} `json:"{{.ColComment}}" `  //{{.ColComment}}{{end}}
+    {{range .ColList }}{{if eq .Base false}}{{.BigHumpColName}}  {{.ColTypeNameGo}} `json:"{{.LittleHumpColName}}" `  //{{.ColComment}}{{end}}
     {{ end }}
 }
 

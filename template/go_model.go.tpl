@@ -82,7 +82,7 @@ func ({{.First}} *{{.BigHumpTableName}}) update(db *gorm.DB) error {
     return nil
 }
 
-func ({{.First}} *{{.BigHumpTableName}}) del(db *gorm.DB) error {
+func ({{.First}} {{.BigHumpTableName}}) del(db *gorm.DB) error {
 	if err := db.Model({{.BigHumpTableName}}{}).
 		Where("id=?", {{.First}}.ID).
 		Delete(&{{.BigHumpTableName}}{}).Error; err != nil {
@@ -105,8 +105,7 @@ func ({{.First}} *{{.BigHumpTableName}}) New() error {
 func ({{.First}} *{{.BigHumpTableName}}) Update() error {
 	err := {{.ConnectDb}}.Transaction(func(tx *gorm.DB) (err error) {
 		//检查是否存在
-		con := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}
-		olds, err := con.getByCon(tx)
+		olds, err := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}.getByCon(tx)
 		if err != nil {
 			return
 		}
@@ -127,8 +126,7 @@ func ({{.First}} *{{.BigHumpTableName}}) Update() error {
 func ({{.First}} *{{.BigHumpTableName}}) Remove() error {
 	err := {{.ConnectDb}}.Transaction(func(tx *gorm.DB) (err error) {
 		//检查是否存在
-		con := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}
-		olds, err := con.getByCon(tx)
+		olds, err := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}.getByCon(tx)
 		if err != nil {
 			return
 		}
@@ -151,8 +149,7 @@ func ({{.First}} *{{.BigHumpTableName}})QueryByID(query *{{.ModelName}}.QueryByI
 	db := {{.ConnectDb}}
 
     //检查是否存在
-    con := {{.BigHumpTableName}}{Model: gorm.Model{ID: {{.First}}.ID}}
-    olds, err := con.getByCon(db)
+    olds, err := {{.BigHumpTableName}}{Model: gorm.Model{ID:uint(query.GetId())}}.getByCon(db)
     if err != nil {
         return
     }

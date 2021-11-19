@@ -16,7 +16,7 @@ var NormalType = map[string]string{
 	"text":      "string",
 	"double":    "double",
 	"decimal":   "double",
-	"float":     "float",
+	"float":     "float32",
 	"bool":      "bool",
 	"binary":    "string",
 	"varbinary": "string",

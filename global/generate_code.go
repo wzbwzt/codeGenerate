@@ -68,8 +68,8 @@ var IgnoreCol = map[string]bool{
 
 // 生成model基础字段忽略
 var BaseCol = map[string]bool{
-	"id":         true,
-	"proj_id":    true,
+	"id": true,
+	// "proj_id":    true,
 	"created_at": true,
 	"created_by": true,
 	"updated_at": true,
@@ -79,7 +79,7 @@ var BaseCol = map[string]bool{
 }
 
 var NonPointerCol = map[string]bool{
-	"proj_id":    true,
+	// "proj_id":    true,
 	"created_at": true,
 	"updated_at": true,
 }

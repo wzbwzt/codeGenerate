@@ -52,7 +52,7 @@
 - 新增{{.TableComment}}
 
 **请求URL：** 
-- ` http://xx.com/api/v1/carConfig/park/{{.LittleHumpTableName}}/add`
+- ` http://xx.com/api/v1/park/{{.LittleHumpTableName}}/add`
   
 **请求方式：**
 - POST 
